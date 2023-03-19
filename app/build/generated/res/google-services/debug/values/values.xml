@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="default_web_client_id" translatable="false">352603310206-m7gk8i0akemot7aliq66vghdldsknr42.apps.googleusercontent.com</string>
+    <string name="gcm_defaultSenderId" translatable="false">352603310206</string>
+    <string name="google_api_key" translatable="false">AIzaSyCDy1I-81aREJ-3QJbldDJJuYuU7WJ-wWQ</string>
+    <string name="google_app_id" translatable="false">1:352603310206:android:7cc91b5082e8bcfdecf02f</string>
+    <string name="google_crash_reporting_api_key" translatable="false">AIzaSyCDy1I-81aREJ-3QJbldDJJuYuU7WJ-wWQ</string>
+    <string name="google_storage_bucket" translatable="false">gatekeep-7b198.appspot.com</string>
+    <string name="project_id" translatable="false">gatekeep-7b198</string>
+</resources>
