@@ -29,9 +29,8 @@ class QRScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Enable the ActionBar
-        supportActionBar!!.setDisplayHomeAsUpEnabled(false)
-        supportActionBar!!.setDisplayShowTitleEnabled(true)
+        // Disable the ActionBar
+        supportActionBar!!.hide()
 
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
@@ -67,7 +66,7 @@ class QRScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         result?.let {
             val qrData = it.text.split(",")
             val name = qrData[0]
-            val id = if (qrData.size >= 2) qrData[1] else "Unknown"
+            if (qrData.size >= 2) qrData[1] else "Unknown"
 
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
             val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())

@@ -1,11 +1,17 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
+    ext {
+        kotlin_version = '1.8.20-RC'
+    }
     repositories {
+        mavenCentral()
+        google()
         // Make sure that you have the following two repositories
         }
     dependencies {
         // Add the dependency for the Google services Gradle plugin
         classpath 'com.google.gms:google-services:4.3.15'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
 plugins {
@@ -16,6 +22,8 @@ plugins {
 
 allprojects {
     repositories {
+
+
         // Make sure that you have the following two repositories
     }
 }

@@ -10,7 +10,6 @@ import com.google.firebase.database.ValueEventListener
 import android.os.Bundle
 import android.view.Menu
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -21,16 +20,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
     private lateinit var ivQrCode: ImageView
-    private lateinit var tvName: TextView
 
     @SuppressLint("CutPasteId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Enable the ActionBar
-        supportActionBar!!.setDisplayHomeAsUpEnabled(false)
-        supportActionBar!!.setDisplayShowTitleEnabled(true)
+        // Disable the ActionBar
+        supportActionBar!!.hide()
 
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
@@ -40,26 +37,13 @@ class MainActivity : AppCompatActivity() {
         val currentUser = auth.currentUser
         if (currentUser ==  null) {
             // User is not logged in, go to Login Activity
-            startActivity(Intent(this, LoginActivity::class.java))
+            startActivity(Intent(this, FirstLoginActivity::class.java))
             finish()
             return
         }
 
-        val nameTextView = findViewById<TextView>(R.id.user_name_textview)
-        val emailTextView = findViewById<TextView>(R.id.user_email_textview)
-
-        // Retrieve user's name and email from Firebase
-        val currentUser2 = FirebaseAuth.getInstance().currentUser
-        val name = currentUser2?.displayName
-        val email = currentUser2?.email
-
-        // Set the text of the TextViews
-        nameTextView.text = name
-        emailTextView.text = email
-
         // Initialize ivQrCode and tvName
         ivQrCode = findViewById(R.id.ivQrCode)
-        tvName = findViewById(R.id.user_name_textview)
 
         // Load user's QR code and name
         val currentUser1 = auth.currentUser
@@ -67,13 +51,6 @@ class MainActivity : AppCompatActivity() {
         val usersRef = database.getReference("users")
         usersRef.child(currentUserUid).addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val userName = dataSnapshot.child("name").getValue(String::class.java)
-                if (userName != null) {
-                    // Set the user's name in the TextView
-                    tvName.text = userName
-                    // Set the ActionBar title
-                    supportActionBar!!.title = "GateKeep"
-
                     // Load user's QR code from Firebase Storage and display it in ImageView
                     val storageRef = FirebaseStorage.getInstance().reference
                     val qrCodeRef = storageRef.child("qr_codes/$currentUserUid.jpg")
@@ -89,7 +66,6 @@ class MainActivity : AppCompatActivity() {
                         ).show()
                     }
                 }
-            }
             override fun onCancelled(databaseError: DatabaseError) {
                 Toast.makeText(
                     this@MainActivity,
