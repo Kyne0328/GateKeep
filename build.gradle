@@ -6,6 +6,7 @@ buildscript {
     repositories {
         mavenCentral()
         google()
+        maven { url 'https://jitpack.io' }
         // Make sure that you have the following two repositories
         }
     dependencies {
@@ -22,8 +23,6 @@ plugins {
 
 allprojects {
     repositories {
-
-
         // Make sure that you have the following two repositories
     }
 }

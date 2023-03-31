@@ -1,12 +1,10 @@
 package com.fernandez.gatekeep
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.Gravity
-import android.view.Menu
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.Toast
@@ -28,9 +26,6 @@ class QRScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Disable the ActionBar
-        supportActionBar!!.hide()
 
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
@@ -66,8 +61,6 @@ class QRScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         result?.let {
             val qrData = it.text.split(",")
             val name = qrData[0]
-            if (qrData.size >= 2) qrData[1] else "Unknown"
-
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
             val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
 
@@ -110,22 +103,5 @@ class QRScannerActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
     }
     companion object {
         private const val TAG = "QRScannerActivity"
-    }
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        // Inflate the menu layout
-        menuInflater.inflate(R.menu.menu_main, menu)
-
-        // Get a reference to the logout menu item
-        val logoutItem = menu.findItem(R.id.action_logout)
-
-        // Set a click listener on the logout menu item
-        logoutItem.setOnMenuItemClickListener {
-            // Sign out user from Firebase Auth and go to Login Activity
-            auth.signOut()
-            startActivity(Intent(this, LoginActivity::class.java))
-            finish()
-            true
-        }
-        return true
     }
 }

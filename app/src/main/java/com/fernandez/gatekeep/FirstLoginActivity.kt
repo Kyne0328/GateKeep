@@ -16,8 +16,6 @@ class FirstLoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_first_login)
 
-        supportActionBar!!.hide()
-
         btnLogin = findViewById(R.id.login1)
         btnRegister = findViewById(R.id.register1)
 

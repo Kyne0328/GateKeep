@@ -16,8 +16,6 @@ class ForgotPasswordActivity : AppCompatActivity() {
         setContentView(R.layout.activity_forgot_password)
 
         auth = FirebaseAuth.getInstance()
-        // Disable the ActionBar
-        supportActionBar!!.hide()
 
         val etEmail = findViewById<EditText>(R.id.et_email)
         val btnResetPassword = findViewById<Button>(R.id.btn_reset_password)
