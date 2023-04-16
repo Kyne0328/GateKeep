@@ -57,7 +57,3 @@ If you encounter any issues or have any questions about the app, please contact 
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-<<<<<<< HEAD
-=======
-
->>>>>>> gatekeep/main
