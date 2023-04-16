@@ -37,7 +37,7 @@ Note: Before installing, make sure that your device allows installation of apps 
 
 ## Building from source
 
-1. Clone the repository using `git clone https://github.com/YOUR-USERNAME/GateKeep.git`.
+1. Clone the repository using `git clone https://github.com/KyNe0328/GateKeep.git`.
 2. Open the project in Android Studio.
 3. Connect your Android device to your computer using a USB cable.
 4. Select your device from the device drop-down menu in Android Studio.
