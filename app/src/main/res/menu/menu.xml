@@ -6,10 +6,6 @@
         android:icon="@drawable/ic_navbar_home_active"/>
 
     <item
-        android:title="QR"
-        android:icon="@drawable/baseline_qr_code_2_24"/>
-
-    <item
         android:title="Settings"
         android:icon="@drawable/outline_settings_24"/>
 

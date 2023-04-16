@@ -30,9 +30,8 @@ class MainActivity : AppCompatActivity() {
             val fragmentManager = supportFragmentManager
             val fragmentTransaction = fragmentManager.beginTransaction()
             when (pos) {
-                0 -> fragmentTransaction.replace(R.id.frameLayout, HomeFragment())
-                1 -> fragmentTransaction.replace(R.id.frameLayout, QRFragment())
-                2 -> fragmentTransaction.replace(R.id.frameLayout, SettingsFragment())
+                0 -> fragmentTransaction.replace(R.id.frameLayout, QRFragment())
+                1 -> fragmentTransaction.replace(R.id.frameLayout, SettingsFragment())
             }
             fragmentTransaction.commit()
         }
@@ -64,6 +63,12 @@ class MainActivity : AppCompatActivity() {
                         // User is admin, go to QR Scanner Activity
                         startActivity(Intent(this@MainActivity, QRScannerActivity::class.java))
                         finish()
+                    } else {
+                        // User is not an admin, start QRFragment
+                        val fragmentManager = supportFragmentManager
+                        val fragmentTransaction = fragmentManager.beginTransaction()
+                        fragmentTransaction.replace(R.id.frameLayout, QRFragment())
+                        fragmentTransaction.commit()
                     }
                 }
                 override fun onCancelled(databaseError: DatabaseError) {
