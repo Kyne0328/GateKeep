@@ -12,13 +12,14 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import net.glxn.qrgen.android.QRCode
 import java.io.ByteArrayOutputStream
 
+@Suppress("SpellCheckingInspection", "SameParameterValue")
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
@@ -94,27 +95,24 @@ class RegisterActivity : AppCompatActivity() {
             val storageRef = FirebaseStorage.getInstance().reference
             val qrCodeRef = storageRef.child("qr_codes/${user.uid}.jpg")
 
-            GlobalScope.launch(Dispatchers.IO) {
+            CoroutineScope(Dispatchers.IO).launch {
                 val baos = ByteArrayOutputStream()
                 qrCode.compress(Bitmap.CompressFormat.JPEG, 100, baos)
                 val data = baos.toByteArray()
-                qrCodeRef.putBytes(data).await()
+                try {
+                    qrCodeRef.putBytes(data).await()
 
-                // Save user name and admin status to Firebase Realtime Database
-                val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
-                databaseRef.child("name").setValue(name).addOnSuccessListener {
-                    Log.d(TAG, "User name saved to Firebase Realtime Database")
-                }.addOnFailureListener {
-                    Log.e(TAG, "Failed to save user name to Firebase Realtime Database", it)
-                }
-                databaseRef.child("isAdmin").setValue(isAdmin).addOnSuccessListener {
-                    Log.d(TAG, "User admin status saved to Firebase Realtime Database")
-                }.addOnFailureListener {
-                    Log.e(TAG, "Failed to save user admin status to Firebase Realtime Database", it)
-                }
+                    // Save user name and admin status to Firebase Realtime Database
+                    val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
+                    databaseRef.child("name").setValue(name).await()
+                    databaseRef.child("isAdmin").setValue(isAdmin).await()
 
-                // Log success message
-                Log.d(TAG, "QR code saved to Firebase Storage")
+                    // Log success message
+                    Log.d(TAG, "QR code saved to Firebase Storage")
+                } catch (e: Exception) {
+                    // Handle any exceptions that occurred
+                    Log.e(TAG, "Failed to save user data to Firebase", e)
+                }
             }
         }
     }
