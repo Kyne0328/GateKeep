@@ -18,15 +18,36 @@ class QRScannerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_qr_scanner)
 
-        // SmoothBottomBar
         smoothbottombar = findViewById(R.id.bottomBar)
 
         smoothbottombar.setOnItemSelectedListener { pos ->
             val fragmentManager = supportFragmentManager
             val fragmentTransaction = fragmentManager.beginTransaction()
+
+            // Hide all fragments
+            val fragments = fragmentManager.fragments
+            for (fragment in fragments) {
+                fragmentTransaction.hide(fragment)
+            }
+
+            // Show the selected fragment
             when (pos) {
-                0 -> fragmentTransaction.replace(R.id.fragment_container, ScannerFragment())
-                1 -> fragmentTransaction.replace(R.id.fragment_container, SettingsFragment())
+                0 -> {
+                    val scannerFragment = fragmentManager.findFragmentByTag("scanner_fragment")
+                    if (scannerFragment == null) {
+                        fragmentTransaction.add(R.id.fragment_container, ScannerFragment(), "scanner_fragment")
+                    } else {
+                        fragmentTransaction.show(scannerFragment)
+                    }
+                }
+                1 -> {
+                    val settingsFragment = fragmentManager.findFragmentByTag("settings_fragment")
+                    if (settingsFragment == null) {
+                        fragmentTransaction.add(R.id.fragment_container, SettingsFragment(), "settings_fragment")
+                    } else {
+                        fragmentTransaction.show(settingsFragment)
+                    }
+                }
             }
             fragmentTransaction.commit()
         }
