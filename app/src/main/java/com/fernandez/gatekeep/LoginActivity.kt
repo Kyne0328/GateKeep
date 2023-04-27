@@ -1,13 +1,16 @@
 package com.fernandez.gatekeep
 
+import android.app.AlertDialog
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
-import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.database.FirebaseDatabase
 
 class LoginActivity : AppCompatActivity() {
@@ -17,6 +20,16 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var btnLogin: Button
     private lateinit var btnRegister: Button
 
+    private fun showErrorDialog(message: String) {
+        val builder = AlertDialog.Builder(this)
+        builder.setMessage(message)
+            .setCancelable(false)
+            .setPositiveButton("OK") { dialog, _ ->
+                dialog.dismiss()
+            }
+        val alert = builder.create()
+        alert.show()
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
@@ -42,7 +55,7 @@ class LoginActivity : AppCompatActivity() {
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                showErrorDialog("Please fill in all fields")
                 return@setOnClickListener
             }
             FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
@@ -66,7 +79,12 @@ class LoginActivity : AppCompatActivity() {
                             }
                         }
                     } else {
-                        Toast.makeText(this, "Authentication failed", Toast.LENGTH_SHORT).show()
+                        when (task.exception) {
+                            is FirebaseAuthInvalidUserException -> showErrorDialog("Invalid email address")
+                            is FirebaseAuthInvalidCredentialsException -> showErrorDialog("Invalid password")
+                            is FirebaseNetworkException -> showErrorDialog("Unable to connect to the network")
+                            else -> showErrorDialog("Authentication failed")
+                        }
                     }
                 }
         }
