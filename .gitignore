@@ -13,3 +13,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+/app/release/
+/app/src/test/
+/app/src/androidTest/
