@@ -1,5 +1,6 @@
 package com.fernandez.gatekeep
 
+import android.app.AlertDialog
 import android.content.ContentValues.TAG
 import android.graphics.Bitmap
 import android.os.Bundle
@@ -36,28 +37,28 @@ class RegisterActivity : AppCompatActivity() {
         val etPassword = findViewById<EditText>(R.id.et_password)
         val btnRegister = findViewById<Button>(R.id.btn_register)
 
+
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
             val isAdmin = false
 
-            // Perform validation on user input
-            if (name.isEmpty()) {
-                Toast.makeText(applicationContext, "Please enter your name", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            }
-
-            if (email.isEmpty()) {
-                Toast.makeText(applicationContext, "Please enter your email", Toast.LENGTH_SHORT)
-                    .show()
-                return@setOnClickListener
-            }
-
-            if (password.isEmpty()) {
-                Toast.makeText(applicationContext, "Please enter your password", Toast.LENGTH_SHORT)
-                    .show()
+            // Check if any of the fields is empty
+            if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                // Show an error dialog
+                val builder = AlertDialog.Builder(this)
+                builder.setTitle("Error")
+                if (name.isEmpty()) {
+                    builder.setMessage("Please enter your name")
+                } else if (email.isEmpty()) {
+                    builder.setMessage("Please enter your email")
+                } else if (password.isEmpty()) {
+                    builder.setMessage("Please enter your password")
+                }
+                builder.setPositiveButton("OK", null)
+                val dialog = builder.create()
+                dialog.show()
                 return@setOnClickListener
             }
 
@@ -86,10 +87,11 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveUserName(user: FirebaseUser?, name: String, isAdmin: Boolean) {
+        private fun saveUserName(user: FirebaseUser?, name: String, isAdmin: Boolean) {
         user?.let {
             // Generate QR code and convert to Bitmap
-            val qrCode = QRCode.from(name).withSize(250, 250).bitmap()
+            val qrData = "${user.uid},$name"
+            val qrCode = QRCode.from(qrData).withSize(250, 250).bitmap()
 
             // Upload QR code to Firebase Storage
             val storageRef = FirebaseStorage.getInstance().reference
