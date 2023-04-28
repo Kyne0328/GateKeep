@@ -69,13 +69,17 @@ class LoginActivity : AppCompatActivity() {
                                 val isAdmin = snapshot.child("isAdmin").value as? Boolean
                                 if (isAdmin != null && isAdmin) {
                                     val intent = Intent(this, QRScannerActivity::class.java)
+                                    // Create a new task stack and add QRScannerActivity to it
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                     startActivity(intent)
-                                    finish() // Call finish() to prevent going back to LoginActivity using the back button
                                 } else {
                                     val intent = Intent(this, MainActivity::class.java)
+                                    // Create a new task stack and add MainActivity to it
+                                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                                     startActivity(intent)
-                                    finish() // Call finish() to prevent going back to LoginActivity using the back button
                                 }
+                                // Clear all background intents
+                                finishAffinity()
                             }
                         }
                     } else {
