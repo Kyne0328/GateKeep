@@ -23,40 +23,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // SmoothBottomBar
+        // Initialize SmoothBottomBar
         smoothbottombar = findViewById(R.id.bottomBar)
-
-        smoothbottombar.setOnItemSelectedListener { pos ->
-            val fragmentManager = supportFragmentManager
-            val fragmentTransaction = fragmentManager.beginTransaction()
-
-            // Hide all fragments
-            val fragments = fragmentManager.fragments
-            for (fragment in fragments) {
-                fragmentTransaction.hide(fragment)
-            }
-
-            // Show the selected fragment
-            when (pos) {
-                0 -> {
-                    val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
-                    if (qrFragment == null) {
-                        fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
-                    } else {
-                        fragmentTransaction.show(qrFragment)
-                    }
-                }
-                1 -> {
-                    val settingsFragment = fragmentManager.findFragmentByTag("settings_fragment")
-                    if (settingsFragment == null) {
-                        fragmentTransaction.add(R.id.frameLayout, SettingsFragment(), "settings_fragment")
-                    } else {
-                        fragmentTransaction.show(settingsFragment)
-                    }
-                }
-            }
-            fragmentTransaction.commit()
-        }
 
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
@@ -89,7 +57,13 @@ class MainActivity : AppCompatActivity() {
                         // User is not an admin, start QRFragment
                         val fragmentManager = supportFragmentManager
                         val fragmentTransaction = fragmentManager.beginTransaction()
-                        fragmentTransaction.replace(R.id.frameLayout, QRFragment())
+
+                        val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
+                        if (qrFragment == null) {
+                            fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
+                        } else {
+                            fragmentTransaction.show(qrFragment)
+                        }
                         fragmentTransaction.commit()
                     }
                 }
@@ -101,5 +75,37 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 }
             })
+
+        smoothbottombar.setOnItemSelectedListener { pos ->
+            val fragmentManager = supportFragmentManager
+            val fragmentTransaction = fragmentManager.beginTransaction()
+
+            // Hide all fragments
+            val fragments = fragmentManager.fragments
+            for (fragment in fragments) {
+                fragmentTransaction.hide(fragment)
+            }
+
+            // Show the selected fragment
+            when (pos) {
+                0 -> {
+                    val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
+                    if (qrFragment == null) {
+                        fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
+                    } else {
+                        fragmentTransaction.show(qrFragment)
+                    }
+                }
+                1 -> {
+                    val settingsFragment = fragmentManager.findFragmentByTag("settings_fragment")
+                    if (settingsFragment == null) {
+                        fragmentTransaction.add(R.id.frameLayout, SettingsFragment(), "settings_fragment")
+                    } else {
+                        fragmentTransaction.show(settingsFragment)
+                    }
+                }
+            }
+            fragmentTransaction.commit()
+        }
     }
 }
