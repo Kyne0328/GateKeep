@@ -66,8 +66,9 @@ class QRFragment : Fragment() {
                         // Retrieve attendance data based on user's name
                         val attendanceRef = FirebaseDatabase.getInstance().getReference("attendance")
                             .child(currentUserUid)
-                        attendanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        attendanceRef.addValueEventListener(object : ValueEventListener {
                             override fun onDataChange(dataSnapshot: DataSnapshot) {
+                                attendanceList.clear()
                                 for (attendanceSnapshot in dataSnapshot.children) {
                                     val attendanceData = attendanceSnapshot.value as HashMap<*, *>
                                     val date = attendanceData["date"] as String
