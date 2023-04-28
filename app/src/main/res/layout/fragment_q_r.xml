@@ -23,11 +23,14 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:contentDescription="@string/student_qr"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_qr_code_placeholder"
-        app:layout_constraintBottom_toTopOf="@+id/rvAttendance"
-        app:layout_constraintEnd_toEndOf="@+id/imageView"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.497"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/imageView"
+        app:layout_constraintVertical_bias="0.279"
         tools:ignore="ImageContrastCheck" />
 
     <TextView
