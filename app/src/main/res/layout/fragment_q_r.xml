@@ -38,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="13dp"
-        android:text="@string/your_name"
+        android:text="@string/welcome"
         android:textColor="#2f3363"
         android:textSize="18sp"
         android:textStyle="bold"
