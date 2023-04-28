@@ -6,17 +6,17 @@
     <string name="the_ultimate_school_security_and_gate_pass_app">The ultimate school security gate pass solution</string>
     <string name="welcome_to_n_gate_keep">Welcome to\n GateKeep</string>
     <string name="forgot_your_npassword">Forgot your\nPassword?</string>
-    <string name="your_email">Your email</string>
+    <string name="your_email">Email</string>
     <string name="enter_your_email">Enter your Email</string>
     <string name="reset_password">Reset Password</string>
     <string name="login_to_your_naccount">Login to your\nAccount</string>
-    <string name="your_password">Your password</string>
+    <string name="your_password">Password</string>
     <string name="enter_your_password">Enter your Password</string>
     <string name="forget_password">Forget password</string>
     <string name="or">or</string>
     <string name="dont_have_an_account_register">Register</string>
     <string name="create_an_naccount">Create an\nAccount</string>
-    <string name="your_name">Your name </string>
+    <string name="your_name">Name </string>
     <string name="enter_your_full_name">Enter your full name</string>
     <string name="register">Register</string>
     <!-- TODO: Remove or change this placeholder text -->
@@ -27,4 +27,6 @@
     <string name="links">Links</string>
     <string name="github">Github</string>
     <string name="log_out">Log Out</string>
+    <string name="welcome">Welcome,</string>
+    <string name="history">History</string>
 </resources>
