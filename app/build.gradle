@@ -14,7 +14,7 @@ android {
         minSdk 24
         targetSdk 33
         versionCode 1
-        versionName '0.1.21'
+        versionName '0.1.23'
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -24,6 +24,7 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            multiDexEnabled true
         }
     }
     compileOptions {
@@ -33,6 +34,7 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    buildToolsVersion '33.0.2'
 }
 
 dependencies {
