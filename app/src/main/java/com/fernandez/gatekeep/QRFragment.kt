@@ -1,6 +1,12 @@
 package com.fernandez.gatekeep
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.BitmapShader
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -104,7 +110,19 @@ class QRFragment : Fragment() {
                     val ONE_MEGABYTE: Long = 1024 * 1024
                     qrCodeRef.getBytes(ONE_MEGABYTE).addOnSuccessListener { bytes ->
                         val qrCodeBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                        ivQrCode.setImageBitmap(qrCodeBitmap)
+
+                        // Create a new Bitmap with rounded corners
+                        val roundedBitmap = Bitmap.createBitmap(qrCodeBitmap.width, qrCodeBitmap.height, Bitmap.Config.ARGB_8888)
+                        val canvas = Canvas(roundedBitmap)
+                        val paint = Paint()
+                        paint.isAntiAlias = true
+                        val shader = BitmapShader(qrCodeBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+                        paint.shader = shader
+                        val rect = RectF(0f, 0f, qrCodeBitmap.width.toFloat(), qrCodeBitmap.height.toFloat())
+                        canvas.drawRoundRect(rect, 15f, 15f, paint)
+
+                        // Set the rounded bitmap to the ivQrCode ImageView
+                        ivQrCode.setImageBitmap(roundedBitmap)
                     }.addOnFailureListener { exception ->
                         Toast.makeText(
                             requireContext(),
