@@ -29,4 +29,6 @@
     <string name="log_out">Log Out</string>
     <string name="welcome">Welcome,</string>
     <string name="history">History</string>
+    <string name="disclaimer_message">Please note that the GateKeep app is designed for School entry tracking purposes only. The app is not responsible for verifying the accuracy of the entry records of the attendees. The QR codes assigned to the students are solely for the purpose of entry tracking and should not be used for any other purpose. The app does not guarantee the security or confidentiality of the student\'s personal information, including their name and email address. The Gate Keeper is solely responsible for ensuring that the attendance records are accurate and up-to-date. The use of this app is at the discretion of the user, and we assume no liability for any issues arising from the use of this app.</string>
+    <string name="check_for_update">Check for update</string>
 </resources>

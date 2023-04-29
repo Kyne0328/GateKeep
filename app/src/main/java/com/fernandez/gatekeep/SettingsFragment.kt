@@ -4,18 +4,30 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 
 class SettingsFragment : Fragment() {
 
     private lateinit var githubButton: Button
+    private lateinit var updateButton: Button
     private lateinit var logoutButton: Button
     private lateinit var disclaimerButton: Button
+
+    private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -23,6 +35,11 @@ class SettingsFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
+
+        updateButton = view.findViewById(R.id.update_button)
+        updateButton.setOnClickListener {
+            checkForUpdates()
+        }
 
         // Initialize views
         githubButton = view.findViewById(R.id.github_button)
@@ -53,5 +70,51 @@ class SettingsFragment : Fragment() {
         }
 
         return view
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        coroutineScope.cancel()
+    }
+    private fun checkForUpdates() {
+        coroutineScope.launch(Dispatchers.IO) {
+            val latestVersion = getLatestVersionFromGithub()
+            if (latestVersion != null && isUpdateAvailable(latestVersion)) {
+                withContext(Dispatchers.Main) {
+                    showUpdateDialog(latestVersion)
+                }
+            }
+        }
+    }
+    private fun getLatestVersionFromGithub(): String? {
+        val client = OkHttpClient()
+        val request = Request.Builder()
+            .url("https://api.github.com/repos/KyNe0328/GateKeep/releases/latest")
+            .build()
+
+        return try {
+            val response = client.newCall(request).execute()
+            val responseString = response.body.string()
+            val jsonObject = JSONObject(responseString)
+            jsonObject.getString("tag_name")
+        } catch (e: Exception) {
+            null
+        }
+    }
+    private fun isUpdateAvailable(latestVersion: String): Boolean {
+        return latestVersion != BuildConfig.VERSION_NAME
+    }
+
+    private fun showUpdateDialog(latestVersion: String) {
+        val message = "New update $latestVersion is available. Do you want to download it?"
+        AlertDialog.Builder(requireContext())
+            .setTitle("New update found")
+            .setMessage(message)
+            .setPositiveButton("Download") { _, _ ->
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse("https://github.com/KyNe0328/GateKeep/releases/latest")
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 }
