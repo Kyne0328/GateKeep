@@ -3,8 +3,11 @@ package com.fernandez.gatekeep
 import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.FirebaseNetworkException
@@ -19,6 +22,7 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var etPassword: EditText
     private lateinit var btnLogin: Button
     private lateinit var btnRegister: Button
+    private lateinit var loadingOverlay: ProgressBar
 
     private fun showErrorDialog(message: String) {
         val builder = AlertDialog.Builder(this)
@@ -39,6 +43,9 @@ class LoginActivity : AppCompatActivity() {
         btnLogin = findViewById(R.id.btn_login)
         btnRegister = findViewById(R.id.btn_register)
 
+        //initialize the loadingOverlay
+        loadingOverlay = findViewById(R.id.loadingOverlay)
+
         val tvForgotPassword = findViewById<TextView>(R.id.tv_forgot_password)
 
         tvForgotPassword.setOnClickListener {
@@ -58,6 +65,8 @@ class LoginActivity : AppCompatActivity() {
                 showErrorDialog("Please fill in all fields")
                 return@setOnClickListener
             }
+            loadingOverlay.visibility = View.VISIBLE
+            window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
             FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
@@ -90,6 +99,8 @@ class LoginActivity : AppCompatActivity() {
                             else -> showErrorDialog("Authentication failed")
                         }
                     }
+                    loadingOverlay.visibility = View.GONE
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                 }
         }
     }

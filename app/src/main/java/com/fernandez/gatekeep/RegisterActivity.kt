@@ -5,8 +5,11 @@ import android.content.ContentValues.TAG
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -24,6 +27,7 @@ import java.io.ByteArrayOutputStream
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var loadingOverlay: ProgressBar
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,11 +36,13 @@ class RegisterActivity : AppCompatActivity() {
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
 
+        //initialize the loadingOverlay
+        loadingOverlay = findViewById(R.id.loadingOverlay)
+
         val etName = findViewById<EditText>(R.id.et_name)
         val etEmail = findViewById<EditText>(R.id.et_email)
         val etPassword = findViewById<EditText>(R.id.et_password)
         val btnRegister = findViewById<Button>(R.id.btn_register)
-
 
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()
@@ -62,6 +68,8 @@ class RegisterActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            loadingOverlay.visibility = View.VISIBLE
+            window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
             // Create user account with email and password in Firebase Auth
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener { authResult ->
@@ -84,8 +92,10 @@ class RegisterActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                 }
+                loadingOverlay.visibility = View.GONE
+                window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            }
         }
-    }
 
         private fun saveUserName(user: FirebaseUser?, name: String, isAdmin: Boolean) {
         user?.let {

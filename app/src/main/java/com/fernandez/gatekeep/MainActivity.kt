@@ -1,8 +1,10 @@
 package com.fernandez.gatekeep
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.view.WindowManager
+import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -17,8 +19,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var smoothbottombar: SmoothBottomBar
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
+    private lateinit var loadingOverlay: ProgressBar
 
-    @SuppressLint("CutPasteId")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -30,6 +32,9 @@ class MainActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
 
+        //initialize the loadingOverlay
+        loadingOverlay = findViewById(R.id.loadingOverlay)
+
         // Check if user is already logged in
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -40,11 +45,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         // Load user's QR code and name
-        val currentUser1 = auth.currentUser
-        val currentUserUid = currentUser1?.uid ?: return
+        val currentUserUid = currentUser.uid
         val usersRef = database.getReference("users")
 
         // Check if user is admin
+        loadingOverlay.visibility = View.VISIBLE
+        window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
         usersRef.child(currentUserUid).child("isAdmin")
             .addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
@@ -66,6 +72,8 @@ class MainActivity : AppCompatActivity() {
                         }
                         fragmentTransaction.commit()
                     }
+                    loadingOverlay.visibility = View.GONE
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                 }
                 override fun onCancelled(databaseError: DatabaseError) {
                     Toast.makeText(
