@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "766724693754",
+    "firebase_url": "https://gatekeep-43867-default-rtdb.asia-southeast1.firebasedatabase.app",
     "project_id": "gatekeep-43867",
     "storage_bucket": "gatekeep-43867.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "766724693754-t81mc6avfecluclovd6c6afohoqr3h61.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.fernandez.gatekeep",
+            "certificate_hash": "717e3f594b5c5d68ba06190a2d77156c417f3339"
+          }
+        },
         {
           "client_id": "766724693754-7i7jm2u6tn2hhc5l6k0iq62qu3jk46u6.apps.googleusercontent.com",
           "client_type": 3
