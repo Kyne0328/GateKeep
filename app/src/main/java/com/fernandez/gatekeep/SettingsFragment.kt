@@ -8,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.CoroutineScope
@@ -78,14 +79,24 @@ class SettingsFragment : Fragment() {
     private fun checkForUpdates() {
         coroutineScope.launch(Dispatchers.IO) {
             val latestVersion = getLatestVersionFromGithub()
-            if (latestVersion != null && isUpdateAvailable(latestVersion)) {
+            if (latestVersion != null && latestVersion.first?.let { isUpdateAvailable(it) } == true) {
                 withContext(Dispatchers.Main) {
                     showUpdateDialog(latestVersion)
                 }
             }
+            else {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        requireContext(),
+                        "You are already on the latest version!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
         }
     }
-    private fun getLatestVersionFromGithub(): String? {
+
+    private fun getLatestVersionFromGithub(): Triple<String?, String?, String?>? {
         val client = OkHttpClient()
         val request = Request.Builder()
             .url("https://api.github.com/repos/KyNe0328/GateKeep/releases/latest")
@@ -95,24 +106,36 @@ class SettingsFragment : Fragment() {
             val response = client.newCall(request).execute()
             val responseString = response.body.string()
             val jsonObject = JSONObject(responseString)
-            jsonObject.getString("tag_name")
+            val tagName = jsonObject.getString("tag_name")
+            val body = jsonObject.getString("body")
+            val assetsArray = jsonObject.getJSONArray("assets")
+            if (assetsArray.length() > 0) {
+                val assetObject = assetsArray.getJSONObject(0)
+                val downloadUrl = assetObject.getString("browser_download_url")
+                Triple(tagName, downloadUrl, body)
+            } else {
+                Triple(tagName, null, body)
+            }
         } catch (e: Exception) {
             null
         }
     }
+
     private fun isUpdateAvailable(latestVersion: String): Boolean {
         return latestVersion != BuildConfig.VERSION_NAME
     }
 
-    private fun showUpdateDialog(latestVersion: String) {
-        val message = "New update $latestVersion is available. Do you want to download it?"
+    private fun showUpdateDialog(updateInfo: Triple<String?, String?, String?>) {
+        val message = "New update ${updateInfo.first} is available.\n\n${updateInfo.third}\n\nDo you want to download it?"
         AlertDialog.Builder(requireContext())
             .setTitle("New update found")
             .setMessage(message)
             .setPositiveButton("Download") { _, _ ->
-                val intent = Intent(Intent.ACTION_VIEW)
-                intent.data = Uri.parse("https://github.com/KyNe0328/GateKeep/releases/latest")
-                startActivity(intent)
+                updateInfo.second?.let {
+                    val intent = Intent(Intent.ACTION_VIEW)
+                    intent.data = Uri.parse(it)
+                    startActivity(intent)
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
