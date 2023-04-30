@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "352603310206",
-    "project_id": "gatekeep-7b198",
-    "storage_bucket": "gatekeep-7b198.appspot.com"
+    "project_number": "766724693754",
+    "project_id": "gatekeep-43867",
+    "storage_bucket": "gatekeep-43867.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:352603310206:android:7cc91b5082e8bcfdecf02f",
+        "mobilesdk_app_id": "1:766724693754:android:f82a3d9135a9dd7ef87343",
         "android_client_info": {
           "package_name": "com.fernandez.gatekeep"
         }
       },
       "oauth_client": [
         {
-          "client_id": "352603310206-m7gk8i0akemot7aliq66vghdldsknr42.apps.googleusercontent.com",
+          "client_id": "766724693754-7i7jm2u6tn2hhc5l6k0iq62qu3jk46u6.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCDy1I-81aREJ-3QJbldDJJuYuU7WJ-wWQ"
+          "current_key": "AIzaSyCkQT-EpVz3_ZSIWs9FFBDPLFIjXIphTaM"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "352603310206-m7gk8i0akemot7aliq66vghdldsknr42.apps.googleusercontent.com",
+              "client_id": "766724693754-7i7jm2u6tn2hhc5l6k0iq62qu3jk46u6.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
