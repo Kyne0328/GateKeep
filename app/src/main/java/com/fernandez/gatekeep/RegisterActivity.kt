@@ -69,7 +69,10 @@ class RegisterActivity : AppCompatActivity() {
             }
 
             loadingOverlay.visibility = View.VISIBLE
-            window.setFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE, WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
+            window.setFlags(
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+                WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
+            )
             // Create user account with email and password in Firebase Auth
             auth.createUserWithEmailAndPassword(email, password)
                 .addOnSuccessListener { authResult ->
@@ -82,6 +85,8 @@ class RegisterActivity : AppCompatActivity() {
                     ).show()
                     // Save user's name and admin status in Firebase Database
                     saveUserName(user, name, isAdmin)
+                    loadingOverlay.visibility = View.GONE
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                     finish()
                 }
                 .addOnFailureListener { exception ->
@@ -91,9 +96,9 @@ class RegisterActivity : AppCompatActivity() {
                         "Registration failed: ${exception.message}",
                         Toast.LENGTH_SHORT
                     ).show()
+                    loadingOverlay.visibility = View.GONE
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                 }
-                loadingOverlay.visibility = View.GONE
-                window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
             }
         }
 
