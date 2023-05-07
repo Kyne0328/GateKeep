@@ -66,15 +66,16 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         // User is not an admin, start QRFragment
                         val fragmentManager = supportFragmentManager
-                        val fragmentTransaction = fragmentManager.beginTransaction()
-
-                        val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
-                        if (qrFragment == null) {
-                            fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
-                        } else {
-                            fragmentTransaction.show(qrFragment)
+                        if (!isDestroyed) {
+                            val fragmentTransaction = fragmentManager.beginTransaction()
+                            val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
+                            if (qrFragment == null) {
+                                fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
+                            } else {
+                                fragmentTransaction.show(qrFragment)
+                            }
+                            fragmentTransaction.commit()
                         }
-                        fragmentTransaction.commit()
                     }
                     loadingOverlay.visibility = View.GONE
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
