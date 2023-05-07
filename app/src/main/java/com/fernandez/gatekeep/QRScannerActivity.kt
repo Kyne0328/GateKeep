@@ -31,6 +31,14 @@ class QRScannerActivity : AppCompatActivity() {
 
             // Show the selected fragment
             when (pos) {
+                1 -> {
+                    val attendanceHistoryFragment = fragmentManager.findFragmentByTag("attendance_history_fragment")
+                    if (attendanceHistoryFragment == null) {
+                        fragmentTransaction.add(R.id.fragment_container, AttendanceHistoryFragment(), "attendance_history_fragment")
+                    } else {
+                        fragmentTransaction.show(attendanceHistoryFragment)
+                    }
+                }
                 0 -> {
                     val scannerFragment = fragmentManager.findFragmentByTag("scanner_fragment")
                     if (scannerFragment == null) {
@@ -39,7 +47,7 @@ class QRScannerActivity : AppCompatActivity() {
                         fragmentTransaction.show(scannerFragment)
                     }
                 }
-                1 -> {
+                2 -> {
                     val settingsFragment = fragmentManager.findFragmentByTag("settings_fragment")
                     if (settingsFragment == null) {
                         fragmentTransaction.add(R.id.fragment_container, SettingsFragment(), "settings_fragment")
@@ -50,6 +58,7 @@ class QRScannerActivity : AppCompatActivity() {
             }
             fragmentTransaction.commit()
         }
+
 
         // Request camera permission if not granted
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
