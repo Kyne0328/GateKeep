@@ -77,6 +77,9 @@ class QRFragment : Fragment() {
                                     val attendance = Attendance(name, date, time)
                                     attendanceList.add(attendance)
                                 }
+                                val sortedList = attendanceList.sortedWith(compareByDescending<Attendance> { it.date }.thenByDescending { it.time })
+                                attendanceList.clear()
+                                attendanceList.addAll(sortedList)
                                 attendanceAdapter.notifyDataSetChanged()
                             }
 
