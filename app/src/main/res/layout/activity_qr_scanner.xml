@@ -17,7 +17,7 @@
     <me.ibrahimsn.lib.SmoothBottomBar
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="60dp"
         android:contentDescription="navbar"
         app:backgroundColor="#848DFE"
         app:indicatorRadius="10dp"
