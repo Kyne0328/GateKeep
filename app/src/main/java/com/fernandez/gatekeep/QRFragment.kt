@@ -23,6 +23,8 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class QRFragment : Fragment() {
     private lateinit var ivQrCode: ImageView
@@ -71,10 +73,17 @@ class QRFragment : Fragment() {
                                 attendanceList.clear()
                                 for (attendanceSnapshot in dataSnapshot.children) {
                                     val attendanceData = attendanceSnapshot.value as HashMap<*, *>
-                                    val date = attendanceData["date"] as String
-                                    val time = attendanceData["time"] as String
-                                    // Do something with the attendance record
-                                    val attendance = Attendance(name, date, time)
+                                    val date = attendanceData["date"] as? String
+                                    val time = attendanceData["time"] as? String
+                                    if (date == null || time == null) {
+                                        continue
+                                    }
+
+                                    // Convert date format
+                                    val formattedDate = formatDate(date)
+                                    // Convert time format
+                                    val formattedTime = formatTime(time)
+                                    val attendance = Attendance(name, date, time, formattedDate, formattedTime)
                                     attendanceList.add(attendance)
                                 }
                                 val sortedList = attendanceList.sortedWith(compareByDescending<Attendance> { it.date }.thenByDescending { it.time })
@@ -145,5 +154,18 @@ class QRFragment : Fragment() {
                 }
             })
         }
+    }
+    private fun formatDate(date: String): String {
+        val inputFormat = SimpleDateFormat("dd-MM-yy", Locale.US)
+        val outputFormat = SimpleDateFormat("MMMM d, yyyy", Locale.US)
+        val inputDate = inputFormat.parse(date)
+        return outputFormat.format(inputDate)
+    }
+
+    private fun formatTime(time: String): String {
+        val inputFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
+        val outputFormat = SimpleDateFormat("h:mm a", Locale.US)
+        val inputTime = inputFormat.parse(time)
+        return outputFormat.format(inputTime)
     }
 }
