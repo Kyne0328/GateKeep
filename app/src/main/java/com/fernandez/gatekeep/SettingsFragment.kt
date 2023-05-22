@@ -27,6 +27,7 @@ class SettingsFragment : Fragment() {
     private lateinit var updateButton: Button
     private lateinit var logoutButton: Button
     private lateinit var disclaimerButton: Button
+    private lateinit var accountSettingsButton: Button
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
@@ -36,6 +37,8 @@ class SettingsFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
+
+        accountSettingsButton = view.findViewById(R.id.account_settings)
 
         updateButton = view.findViewById(R.id.update_button)
         updateButton.setOnClickListener {
@@ -48,6 +51,11 @@ class SettingsFragment : Fragment() {
         disclaimerButton = view.findViewById(R.id.disclaimer)
 
         // Set click listeners
+        accountSettingsButton.setOnClickListener {
+            val intent = Intent(requireContext(), AccountSettingsActivity::class.java)
+            startActivity(intent)
+        }
+
         githubButton.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/KyNe0328/GateKeep"))
             startActivity(intent)
