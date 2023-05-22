@@ -13,8 +13,8 @@ class AttendanceAdapter(private val attendanceList: MutableList<Attendance>) : R
         private val tvTime: TextView = itemView.findViewById(R.id.tvTime)
 
         fun bind(attendance: Attendance) {
-            tvDate.text = attendance.date
-            tvTime.text = attendance.time
+            tvDate.text = attendance.formattedDate
+            tvTime.text = attendance.formattedTime
         }
     }
 
