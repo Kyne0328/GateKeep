@@ -101,8 +101,8 @@ class AccountSettingsActivity : AppCompatActivity() {
                 mUser.delete()
                     .addOnSuccessListener {
                         mStorageRef.delete()
-                        deleteAttendanceData()
-                        Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT)
+                            .show()
                         startActivity(Intent(this, LoginActivity::class.java))
                         finish()
                     }
@@ -113,10 +113,5 @@ class AccountSettingsActivity : AppCompatActivity() {
             .addOnFailureListener {
                 Toast.makeText(this, it.message, Toast.LENGTH_SHORT).show()
             }
-    }
-
-    private fun deleteAttendanceData() {
-        val attendanceRef = FirebaseDatabase.getInstance().reference.child("attendance").child(mUser.uid)
-        attendanceRef.removeValue()
     }
 }
