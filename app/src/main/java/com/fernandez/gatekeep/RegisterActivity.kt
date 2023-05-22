@@ -7,9 +7,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
+import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -39,15 +41,25 @@ class RegisterActivity : AppCompatActivity() {
         //initialize the loadingOverlay
         loadingOverlay = findViewById(R.id.loadingOverlay)
 
+        //Dropdown
+        val spinnerGrade = findViewById<Spinner>(R.id.spinner_grade)
+        val grades = resources.getStringArray(R.array.grades_array)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, grades)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerGrade.adapter = adapter
+
         val etName = findViewById<EditText>(R.id.et_name)
         val etEmail = findViewById<EditText>(R.id.et_email)
+        val etSection = findViewById<EditText>(R.id.et_section)
         val etPassword = findViewById<EditText>(R.id.et_password)
         val btnRegister = findViewById<Button>(R.id.btn_register)
 
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()
             val email = etEmail.text.toString().trim()
+            val section = etSection.text.toString().trim()
             val password = etPassword.text.toString().trim()
+            val selectedGrade = spinnerGrade.selectedItem as String
             val isAdmin = false
 
             // Check if any of the fields is empty
@@ -57,6 +69,10 @@ class RegisterActivity : AppCompatActivity() {
                 builder.setTitle("Error")
                 if (name.isEmpty()) {
                     builder.setMessage("Please enter your name")
+                } else if (selectedGrade.isEmpty()) {
+                    builder.setMessage("Please choose your grade")
+                } else if (section.isEmpty()) {
+                    builder.setMessage("Please enter your email")
                 } else if (email.isEmpty()) {
                     builder.setMessage("Please enter your email")
                 } else if (password.isEmpty()) {
@@ -84,7 +100,7 @@ class RegisterActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                     // Save user's name and admin status in Firebase Database
-                    saveUserName(user, name, isAdmin)
+                    saveUserName(user, name, selectedGrade, section, isAdmin)
                     loadingOverlay.visibility = View.GONE
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                     finish()
@@ -102,10 +118,10 @@ class RegisterActivity : AppCompatActivity() {
             }
         }
 
-        private fun saveUserName(user: FirebaseUser?, name: String, isAdmin: Boolean) {
+        private fun saveUserName(user: FirebaseUser?, name: String, selectedGrade: String, section: String, isAdmin: Boolean) {
         user?.let {
             // Generate QR code and convert to Bitmap
-            val qrData = "${user.uid},$name"
+            val qrData = "${user.uid},$name,$selectedGrade,$section"
             val qrCode = QRCode.from(qrData).withSize(250, 250).bitmap()
 
             // Upload QR code to Firebase Storage
@@ -123,6 +139,8 @@ class RegisterActivity : AppCompatActivity() {
                     val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
                     databaseRef.child("name").setValue(name).await()
                     databaseRef.child("isAdmin").setValue(isAdmin).await()
+                    databaseRef.child("grade").setValue(selectedGrade).await()
+                    databaseRef.child("section").setValue(section).await()
 
                     // Log success message
                     Log.d(TAG, "QR code saved to Firebase Storage")
