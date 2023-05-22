@@ -30,6 +30,7 @@ class ScannerFragment : Fragment(), ZXingScannerView.ResultHandler {
         auth = FirebaseAuth.getInstance()
 
         scannerView = ZXingScannerView(activity)
+        scannerView.setLaserEnabled(false)
         scannerView.setSquareViewFinder(true) // set view finder to a square
 
         return scannerView
@@ -51,11 +52,13 @@ class ScannerFragment : Fragment(), ZXingScannerView.ResultHandler {
             val qrData = it.text.split(",")
             val userId = qrData[0]
             val name = qrData[1]
+            val grade = qrData[2]
+            val section = qrData[3]
             val time = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
             val date = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault()).format(Date())
 
             val dialogBuilder = AlertDialog.Builder(activity)
-            dialogBuilder.setMessage("Allow entry for the student $name?")
+            dialogBuilder.setMessage("Allow entry for the student: \n$name?")
             dialogBuilder.setCancelable(false)
             dialogBuilder.setPositiveButton("Yes") { _, _ ->
                 // Save data to Firebase Realtime Database
@@ -64,6 +67,8 @@ class ScannerFragment : Fragment(), ZXingScannerView.ResultHandler {
                 attendanceData["date"] = date
                 attendanceData["name"] = name
                 attendanceData["time"] = time
+                attendanceData["grade"] = grade
+                attendanceData["section"] = section
                 databaseRef.child(userId).push().setValue(attendanceData)
                     .addOnSuccessListener {
                         Toast.makeText(
