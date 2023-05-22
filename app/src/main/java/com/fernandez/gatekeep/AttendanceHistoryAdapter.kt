@@ -93,9 +93,12 @@ class AttendanceHistoryAdapter(private val attendanceList: MutableList<Attendanc
                 .setPositiveButton("Delete") { dialog, _ ->
                     val password = passwordEditText.text.toString()
                     val currentUser = FirebaseAuth.getInstance().currentUser
-
+                    if (password.isEmpty()) {
+                        Toast.makeText(context, "Please enter your password", Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
                     if (currentUser != null) {
-                        val credentials = EmailAuthProvider.getCredential(currentUser.email!!, password)
+                        val credentials  = EmailAuthProvider.getCredential(currentUser.email!!, password)
                         currentUser.reauthenticate(credentials)
                             .addOnSuccessListener {
                                 deleteDataFromFirebase(attendance)
