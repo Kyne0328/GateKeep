@@ -1,5 +1,6 @@
 package com.fernandez.gatekeep
 
+import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ContentValues.TAG
 import android.graphics.Bitmap
@@ -7,6 +8,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.WindowManager
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
@@ -48,16 +50,39 @@ class RegisterActivity : AppCompatActivity() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGrade.adapter = adapter
 
+        // Set up section spinner
+        val sectionSpinner = findViewById<Spinner>(R.id.spinner_section)
+
+        spinnerGrade.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            @SuppressLint("DiscouragedApi")
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                parent.getItemAtPosition(position).toString()
+                val sectionArrayResourceId = resources.getIdentifier(
+                    "grade_${position + 7}_sections",
+                    "array",
+                    packageName
+                )
+                val sectionArray: Array<String> = resources.getStringArray(sectionArrayResourceId)
+
+                val sectionAdapter = ArrayAdapter(this@RegisterActivity, android.R.layout.simple_spinner_item, sectionArray)
+                sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                sectionSpinner.adapter = sectionAdapter
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Handle case where nothing is selected (if needed)
+            }
+        }
+
         val etName = findViewById<EditText>(R.id.et_name)
         val etEmail = findViewById<EditText>(R.id.et_email)
-        val etSection = findViewById<EditText>(R.id.et_section)
         val etPassword = findViewById<EditText>(R.id.et_password)
         val btnRegister = findViewById<Button>(R.id.btn_register)
 
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()
             val email = etEmail.text.toString().trim()
-            val section = etSection.text.toString().trim()
+            val section = sectionSpinner.selectedItem.toString().trim()
             val password = etPassword.text.toString().trim()
             val selectedGrade = spinnerGrade.selectedItem as String
             val isAdmin = false
@@ -72,7 +97,7 @@ class RegisterActivity : AppCompatActivity() {
                 } else if (selectedGrade.isEmpty()) {
                     builder.setMessage("Please choose your grade")
                 } else if (section.isEmpty()) {
-                    builder.setMessage("Please enter your email")
+                    builder.setMessage("Please enter your section")
                 } else if (email.isEmpty()) {
                     builder.setMessage("Please enter your email")
                 } else if (password.isEmpty()) {
@@ -115,10 +140,10 @@ class RegisterActivity : AppCompatActivity() {
                     loadingOverlay.visibility = View.GONE
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                 }
-            }
         }
+    }
 
-        private fun saveUserName(user: FirebaseUser?, name: String, selectedGrade: String, section: String, isAdmin: Boolean) {
+    private fun saveUserName(user: FirebaseUser?, name: String, selectedGrade: String, section: String, isAdmin: Boolean) {
         user?.let {
             // Generate QR code and convert to Bitmap
             val qrData = "${user.uid},$name,$selectedGrade,$section"
