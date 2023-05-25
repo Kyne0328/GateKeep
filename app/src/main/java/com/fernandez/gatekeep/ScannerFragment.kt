@@ -31,7 +31,7 @@ class ScannerFragment : Fragment(), ZXingScannerView.ResultHandler {
 
         scannerView = ZXingScannerView(activity)
         scannerView.setLaserEnabled(false)
-        scannerView.setSquareViewFinder(true) // set view finder to a square
+        scannerView.setSquareViewFinder(true)
 
         return scannerView
     }
