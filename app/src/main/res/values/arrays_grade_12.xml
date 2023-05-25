@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grade_12_sections">
+        <item>Honesty</item>
+        <item>Kindness</item>
+        <item>Prudence</item>
+        <item>Chastity</item>
+        <item>Diligence</item>
+        <item>Temperance</item>
+        <item>Humility</item>
+        <item>Loyalty</item>
+        <item>Integrity</item>
+        <item>Fidelity</item>
+        <item>Patience</item>
+    </string-array>
+</resources>

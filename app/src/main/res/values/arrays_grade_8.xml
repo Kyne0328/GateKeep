@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grade_8_sections">
+        <item>Acacia</item>
+        <item>Narra</item>
+        <item>Molave</item>
+        <item>Falcata</item>
+        <item>Lawaan</item>
+        <item>Guijo</item>
+        <item>Apitong</item>
+        <item>Yakal</item>
+        <item>Dao</item>
+        <item>Mahogany</item>
+        <item>Gemelina</item>
+    </string-array>
+</resources>

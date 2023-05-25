@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grade_9_sections">
+        <item>Aquino</item>
+        <item>Arroyo</item>
+        <item>Macapagal</item>
+        <item>Marcos</item>
+        <item>Roxas</item>
+        <item>Quirino</item>
+        <item>Aguinaldo</item>
+        <item>Magsaysay</item>
+        <item>Osmena</item>
+        <item>Quezon</item>
+    </string-array>
+</resources>

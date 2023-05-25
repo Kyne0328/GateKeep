@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grade_11_sections">
+        <item>MistyRose</item>
+        <item>Tangerine</item>
+        <item>Turquoise</item>
+        <item>Canary</item>
+        <item>Teal</item>
+        <item>Crimson</item>
+        <item>Magenta</item>
+        <item>Amber</item>
+        <item>Burgundy</item>
+        <item>Cyan</item>
+    </string-array>
+</resources>

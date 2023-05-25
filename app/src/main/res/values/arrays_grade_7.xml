@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grade_7_sections">
+        <item>Sampaguita</item>
+        <item>Dahlia</item>
+        <item>Rose</item>
+        <item>Zinnia</item>
+        <item>Sunflower</item>
+        <item>Water Lily</item>
+        <item>Santan</item>
+        <item>Rosal</item>
+        <item>Jasmine</item>
+        <item>Gumamela</item>
+    </string-array>
+</resources>

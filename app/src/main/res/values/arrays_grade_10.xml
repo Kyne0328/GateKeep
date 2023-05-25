@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grade_10_sections">
+        <item>Rizal</item>
+        <item>Mabini</item>
+        <item>Lapu-Lapu</item>
+        <item>Luna</item>
+        <item>Gomez</item>
+        <item>Zamora</item>
+        <item>Jacinto</item>
+        <item>Del Pilar</item>
+        <item>Bonifacio</item>
+        <item>Burgos</item>
+    </string-array>
+</resources>
