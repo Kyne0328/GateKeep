@@ -8,9 +8,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -20,6 +28,8 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.io.ByteArrayInputStream
+import kotlin.random.Random
 
 class SettingsFragment : Fragment() {
 
@@ -27,7 +37,10 @@ class SettingsFragment : Fragment() {
     private lateinit var updateButton: Button
     private lateinit var logoutButton: Button
     private lateinit var disclaimerButton: Button
+    private lateinit var auth: FirebaseAuth
+    private lateinit var database: FirebaseDatabase
     private lateinit var accountSettingsButton: Button
+    private lateinit var userProfileImageView: ImageView
 
     private val coroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
 
@@ -39,6 +52,9 @@ class SettingsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_settings, container, false)
 
         accountSettingsButton = view.findViewById(R.id.account_settings)
+        auth = FirebaseAuth.getInstance()
+        database = FirebaseDatabase.getInstance()
+        userProfileImageView = view.findViewById(R.id.ProfilePicture)
 
         updateButton = view.findViewById(R.id.update_button)
         updateButton.setOnClickListener {
@@ -77,7 +93,31 @@ class SettingsFragment : Fragment() {
                 .setPositiveButton("OK", null)
             builder.create().show()
         }
-
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserUid != null) {
+            // Retrieve user's name from the 'users' node
+            val userRef = FirebaseDatabase.getInstance().getReference("users")
+                .child(currentUserUid)
+                .child("name")
+            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val name = snapshot.getValue(String::class.java)
+                    if (name != null) {
+                        // Display the username in a TextView
+                        val uname = view.findViewById<TextView>(R.id.userName)
+                        uname.text = "$name"
+                    }
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Toast.makeText(
+                        requireContext(),
+                        "Failed to load user data: ${databaseError.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
+        }
+        loadProfileImage()
         return view
     }
     override fun onDestroy() {
@@ -147,5 +187,64 @@ class SettingsFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+    private fun loadProfileImage() {
+        val storage = FirebaseStorage.getInstance()
+        val storageRef = storage.reference
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val filename = currentUser?.uid ?: return
+        val profileImageRef = storageRef.child("profiles/$filename.jpg")
+
+        profileImageRef.downloadUrl
+            .addOnSuccessListener { uri ->
+                Glide.with(this)
+                    .load(uri)
+                    .circleCrop()
+                    .into(userProfileImageView)
+            }
+            .addOnFailureListener {
+                // Failed to load the user's custom image, falling back to default avatar
+                val defaultAvatarPrefix = if (userGender()) "male_" else "female_"
+                val randomAvatarIndex = Random.nextInt(1, 4)
+                val defaultAvatarFilename = "$defaultAvatarPrefix$randomAvatarIndex.jpg"
+                val defaultAvatarRef = storageRef.child("profiles/default_avatars/$defaultAvatarFilename")
+
+                defaultAvatarRef.downloadUrl
+                    .addOnSuccessListener { defaultAvatarUri ->
+                        Glide.with(this)
+                            .load(defaultAvatarUri)
+                            .circleCrop()
+                            .into(userProfileImageView)
+
+                        val userUUID = currentUser.uid
+                        val userAvatarRef = storageRef.child("profiles/$userUUID.jpg")
+
+                        defaultAvatarRef.getBytes(Long.MAX_VALUE)
+                            .addOnSuccessListener { bytes ->
+                                val inputStream = ByteArrayInputStream(bytes)
+
+                                val uploadTask = userAvatarRef.putStream(inputStream)
+                                uploadTask.addOnSuccessListener {
+                                    Toast.makeText(context, "Default avatar uploaded", Toast.LENGTH_SHORT).show()
+                                }.addOnFailureListener {
+                                    Toast.makeText(context, "Failed to upload default avatar", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Failed to load default avatar", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(context, "Failed to load default avatar", Toast.LENGTH_SHORT).show()
+                    }
+            }
+    }
+    private fun userGender(): Boolean {
+        return Random.nextBoolean()
+    }
+    override fun onResume() {
+        super.onResume()
+        loadProfileImage()
     }
 }
