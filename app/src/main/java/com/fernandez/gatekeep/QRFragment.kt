@@ -1,12 +1,6 @@
 package com.fernandez.gatekeep
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.graphics.BitmapShader
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
-import android.graphics.Shader
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,12 +11,16 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -59,6 +57,7 @@ class QRFragment : Fragment() {
                 .child(currentUserUid)
                 .child("name")
             userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                @SuppressLint("SetTextI18n")
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val name = snapshot.getValue(String::class.java)
                     if (name != null) {
@@ -69,6 +68,7 @@ class QRFragment : Fragment() {
                         val attendanceRef = FirebaseDatabase.getInstance().getReference("attendance")
                             .child(currentUserUid)
                         attendanceRef.addValueEventListener(object : ValueEventListener {
+                            @SuppressLint("NotifyDataSetChanged")
                             override fun onDataChange(dataSnapshot: DataSnapshot) {
                                 attendanceList.clear()
                                 for (attendanceSnapshot in dataSnapshot.children) {
@@ -119,32 +119,19 @@ class QRFragment : Fragment() {
             usersRef.child(currentUserUid2).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
                     val storageRef = FirebaseStorage.getInstance().reference
-                    val qrCodeRef = storageRef.child("qr_codes/$currentUserUid2.jpg")
-                    val ONE_MEGABYTE: Long = 1024 * 1024
-                    qrCodeRef.getBytes(ONE_MEGABYTE).addOnSuccessListener { bytes ->
-                        val qrCodeBitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
-                        // Create a new Bitmap with rounded corners
-                        val roundedBitmap = Bitmap.createBitmap(qrCodeBitmap.width, qrCodeBitmap.height, Bitmap.Config.ARGB_8888)
-                        val canvas = Canvas(roundedBitmap)
-                        val paint = Paint()
-                        paint.isAntiAlias = true
-                        val shader = BitmapShader(qrCodeBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
-                        paint.shader = shader
-                        val rect = RectF(0f, 0f, qrCodeBitmap.width.toFloat(), qrCodeBitmap.height.toFloat())
-                        canvas.drawRoundRect(rect, 15f, 15f, paint)
-
-                        // Set the rounded bitmap to the ivQrCode ImageView
-                        ivQrCode.setImageBitmap(roundedBitmap)
-                    }.addOnFailureListener { exception ->
-                        Toast.makeText(
-                            requireContext(),
-                            "Failed to load QR code: ${exception.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    val qrCodeRef: StorageReference = storageRef.child("qr_codes/$currentUserUid2.jpg")
+                    qrCodeRef.downloadUrl
+                        .addOnSuccessListener { uri ->
+                            Glide.with(this@QRFragment)
+                                .load(uri)
+                                .apply(RequestOptions.circleCropTransform())
+                                .transform(RoundedCornersTransformation(30, 0))
+                                .into(ivQrCode)
+                        }
+                        .addOnFailureListener {
+                            Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
+                        }
                 }
-
                 override fun onCancelled(databaseError: DatabaseError) {
                     Toast.makeText(
                         requireContext(),
@@ -159,13 +146,13 @@ class QRFragment : Fragment() {
         val inputFormat = SimpleDateFormat("dd-MM-yy", Locale.US)
         val outputFormat = SimpleDateFormat("MMMM d, yyyy", Locale.US)
         val inputDate = inputFormat.parse(date)
-        return outputFormat.format(inputDate)
+        return outputFormat.format(inputDate!!)
     }
 
     private fun formatTime(time: String): String {
         val inputFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
         val outputFormat = SimpleDateFormat("h:mm a", Locale.US)
         val inputTime = inputFormat.parse(time)
-        return outputFormat.format(inputTime)
+        return outputFormat.format(inputTime!!)
     }
 }
