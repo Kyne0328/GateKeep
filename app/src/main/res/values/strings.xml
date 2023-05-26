@@ -48,4 +48,5 @@
     <string name="okay">Okay</string>
     <string name="banner">Banner</string>
     <string name="user_profile">User profile</string>
+    <string name="new_email">New Email</string>
 </resources>
