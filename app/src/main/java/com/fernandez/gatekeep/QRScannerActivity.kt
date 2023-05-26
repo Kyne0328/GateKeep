@@ -94,4 +94,18 @@ class QRScannerActivity : AppCompatActivity() {
             }
         }
     }
+    override fun onResume() {
+        super.onResume()
+
+        val fragmentManager = supportFragmentManager
+        val currentFragment = fragmentManager.findFragmentById(R.id.frameLayout)
+
+        if (currentFragment is ScannerFragment) {
+            smoothbottombar.itemActiveIndex = 0
+        } else if (currentFragment is AttendanceHistoryFragment) {
+            smoothbottombar.itemActiveIndex = 1
+        } else if (currentFragment is SettingsFragment) {
+            smoothbottombar.itemActiveIndex = 2
+        }
+    }
 }
