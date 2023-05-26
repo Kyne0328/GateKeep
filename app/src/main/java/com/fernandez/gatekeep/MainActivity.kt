@@ -121,4 +121,16 @@ class MainActivity : AppCompatActivity() {
             fragmentTransaction.commit()
         }
     }
+    override fun onResume() {
+        super.onResume()
+
+        val fragmentManager = supportFragmentManager
+        val currentFragment = fragmentManager.findFragmentById(R.id.frameLayout)
+
+        if (currentFragment is QRFragment) {
+            smoothbottombar.itemActiveIndex = 0
+        } else if (currentFragment is SettingsFragment) {
+            smoothbottombar.itemActiveIndex = 1
+        }
+    }
 }
