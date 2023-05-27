@@ -57,4 +57,7 @@
     <string name="enter_old_password">Enter old password</string>
     <string name="enter_new_password">Enter new password</string>
     <string name="confirm_new_password">Confirm new password</string>
+    <string name="are_you_sure_you_want_to_delete_your_account">Are you sure you want to delete your account?</string>
+    <string name="warning_this_action_cannot_be_undone">Warning this action cannot be undone!</string>
+    <string name="enter_your_password_to_confirm">Enter your password to confirm</string>
 </resources>
