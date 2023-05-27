@@ -3,6 +3,7 @@ package com.fernandez.gatekeep
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -13,7 +14,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
 import android.text.InputType
-import android.util.Patterns
+import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
@@ -61,6 +62,7 @@ class AccountSettingsActivity : AppCompatActivity() {
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private var capturedImageUri: Uri? = null
     private val CAMERA_PERMISSION_CODE = 200
+    private var currentUserEmail: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -70,7 +72,6 @@ class AccountSettingsActivity : AppCompatActivity() {
         val updatePasswordBtn = findViewById<Button>(R.id.updatePasswordBtn)
         val updateEmailBtn = findViewById<Button>(R.id.updateEmailBtn)
         val deleteAccountBtn = findViewById<Button>(R.id.deleteAccountBtn)
-        val currentEmailAddress = findViewById<EditText>(R.id.currentEmailAddress)
 
         loadProfileImage()
 
@@ -85,16 +86,22 @@ class AccountSettingsActivity : AppCompatActivity() {
         mUser = mAuth.currentUser!!
         mDatabaseRef = FirebaseDatabase.getInstance().reference.child("users").child(mUser.uid)
         mStorageRef = FirebaseStorage.getInstance().reference.child("profiles")
-        val userEmail: String? = mUser.email
-        currentEmailAddress.setText(userEmail)
 
         updateProfileBtn.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.CAMERA),
+                    CAMERA_PERMISSION_CODE
+                )
+            }
             val dialog = dialogBuilder.create()
             dialog.show()
         }
 
         updateEmailBtn.setOnClickListener {
-            updateEmail()
+            showDialog(it.context)
         }
 
         updatePasswordBtn.setOnClickListener {
@@ -199,15 +206,6 @@ class AccountSettingsActivity : AppCompatActivity() {
                 ExifInterface.ORIENTATION_ROTATE_270 -> bitmap?.let { rotateImage(it, 270) }
                 else -> bitmap
             }
-        }
-        // Request camera permission if not granted
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(Manifest.permission.CAMERA),
-                CAMERA_PERMISSION_CODE
-            )
         }
     }
 
@@ -330,55 +328,59 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
-    private fun updateEmail() {
-        val currentEmailAddress = findViewById<EditText>(R.id.currentEmailAddress)
-        val newEmail = currentEmailAddress.text.toString().trim()
+    private fun updateEmail(newEmail: String) {
+        val user = FirebaseAuth.getInstance().currentUser
+        currentUserEmail = user?.email
 
-        // Check if the entered email is invalid
-        if (newEmail.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(newEmail).matches()) {
-            Toast.makeText(this, "Please enter a valid email address.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Check if the email is already the same as the current user's email
-        val currentUserEmail = mUser.email
-        if (currentUserEmail == newEmail) {
-            Toast.makeText(this, "The entered email is already the same.", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // If the email is different, display a confirmation dialog
-        AlertDialog.Builder(this)
-            .setTitle("Confirmation")
-            .setMessage("Are you sure you want to change your email address to $currentEmailAddress?")
-            .setPositiveButton("Yes") { _, _ ->
-                // Proceed with updating the email
-                val credential = EmailAuthProvider.getCredential(currentUserEmail!!, "")
-                mUser.reauthenticate(credential)
-                    .addOnSuccessListener {
-                        mUser.updateEmail(newEmail)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    Toast.makeText(
-                                        this,
-                                        "Email address updated successfully.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                } else {
-                                    Toast.makeText(
-                                        this,
-                                        "Failed to update email address.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+        val credential = currentUserEmail?.let { EmailAuthProvider.getCredential(it, "") }
+        if (credential != null) {
+            mUser.reauthenticate(credential)
+                .addOnSuccessListener {
+                    mUser.updateEmail(newEmail)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                Toast.makeText(
+                                    this, "Email address updated successfully.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(
+                                    this,
+                                    "Failed to update email address.", Toast.LENGTH_SHORT).show()
                             }
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Failed to reauthenticate.", Toast.LENGTH_SHORT).show()
-                    }
-            }
-            .setNegativeButton("No", null)
+                        }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Failed to reauthenticate.", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    private fun showDialog(context: Context) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_email_change, null)
+
+        val dialogTvCurrentEmailAddress = dialogView.findViewById<TextView>(R.id.CurrentEmailAddress)
+        val dialogEtNewEmail = dialogView.findViewById<EditText>(R.id.NewEmail)
+        val dialogChangeEmail = dialogView.findViewById<Button>(R.id.ChangeEmail)
+        val dialogCancel = dialogView.findViewById<Button>(R.id.cancel)
+
+        dialogTvCurrentEmailAddress.text = mUser.email
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(dialogView)
             .show()
+
+        dialogCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogChangeEmail.setOnClickListener {
+            val newEmail = dialogEtNewEmail.text.toString().trim()
+            if (newEmail.isNotEmpty()) {
+                updateEmail(newEmail)
+                dialog.dismiss()
+            } else {
+                Toast.makeText(context, "Please enter a new email address.", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
     override fun onRequestPermissionsResult(
         requestCode: Int,
