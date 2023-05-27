@@ -6,17 +6,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 
 class AttendanceHistoryAdapter(private val attendanceList: MutableList<AttendanceAdmin>) : RecyclerView.Adapter<AttendanceHistoryAdapter.AttendanceViewHolder>() {
 
@@ -59,10 +64,42 @@ class AttendanceHistoryAdapter(private val attendanceList: MutableList<Attendanc
             val dialogTvGradeSection = dialogView.findViewById<TextView>(R.id.dialogTvGradeSection)
             val dialogBtnOk = dialogView.findViewById<Button>(R.id.dialogBtnOk)
             val dialogBtnDelete = dialogView.findViewById<Button>(R.id.DeleteHistoryBtn)
+            val dialogIvUserProfile = dialogView.findViewById<ImageView>(R.id.userProfile)
 
+            val storageRef = FirebaseStorage.getInstance().reference
+            val databaseRef = FirebaseDatabase.getInstance().reference.child("users")
+            databaseRef.orderByChild("name").equalTo(attendance.name).addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(dataSnapshot: DataSnapshot) {
+                    for (snapshot in dataSnapshot.children) {
+                        val studentUUID = snapshot.key
+                        val profileImageRef = storageRef.child("profiles/$studentUUID.jpg")
+                        profileImageRef.downloadUrl
+                            .addOnSuccessListener { uri ->
+                                Glide.with(context)
+                                    .load(uri)
+                                    .apply(RequestOptions.circleCropTransform())
+                                    .transform(RoundedCornersTransformation(30, 0))
+                                    .into(dialogIvUserProfile)
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Failed to load image", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+                override fun onCancelled(databaseError: DatabaseError) {
+                }
+            })
             dialogTvName.text = attendance.name
-            dialogTvDateTime.text = "${attendance.formattedDate} ${attendance.formattedTime}"
-            dialogTvGradeSection.text = "${attendance.grade} ${attendance.section}"
+            dialogTvDateTime.text = buildString {
+        append(attendance.formattedDate)
+        append(" ")
+        append(attendance.formattedTime)
+    }
+            dialogTvGradeSection.text = buildString {
+        append(attendance.grade)
+        append(" ")
+        append(attendance.section)
+    }
 
             val dialog = AlertDialog.Builder(context)
                 .setView(dialogView)
