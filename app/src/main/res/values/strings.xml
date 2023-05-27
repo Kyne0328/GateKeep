@@ -53,4 +53,8 @@
     <string name="change_email_address">Change Email Address</string>
     <string name="enter_new_email_address">Enter new email address</string>
     <string name="cancel">Cancel</string>
+    <string name="change_password">Change Password</string>
+    <string name="enter_old_password">Enter old password</string>
+    <string name="enter_new_password">Enter new password</string>
+    <string name="confirm_new_password">Confirm new password</string>
 </resources>
