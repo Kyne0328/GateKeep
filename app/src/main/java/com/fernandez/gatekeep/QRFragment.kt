@@ -56,7 +56,7 @@ class QRFragment : Fragment() {
             val userRef = FirebaseDatabase.getInstance().getReference("users")
                 .child(currentUserUid)
                 .child("name")
-            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            userRef.addValueEventListener(object : ValueEventListener {
                 @SuppressLint("SetTextI18n")
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val name = snapshot.getValue(String::class.java)

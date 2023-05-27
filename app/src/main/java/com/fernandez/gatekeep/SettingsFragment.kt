@@ -99,13 +99,13 @@ class SettingsFragment : Fragment() {
             val userRef = FirebaseDatabase.getInstance().getReference("users")
                 .child(currentUserUid)
                 .child("name")
-            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            userRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val name = snapshot.getValue(String::class.java)
                     if (name != null) {
                         // Display the username in a TextView
                         val uname = view.findViewById<TextView>(R.id.userName)
-                        uname.text = "$name"
+                        uname.text = name
                     }
                 }
                 override fun onCancelled(databaseError: DatabaseError) {
