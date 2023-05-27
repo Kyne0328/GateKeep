@@ -60,4 +60,6 @@
     <string name="are_you_sure_you_want_to_delete_your_account">Are you sure you want to delete your account?</string>
     <string name="warning_this_action_cannot_be_undone">Warning this action cannot be undone!</string>
     <string name="enter_your_password_to_confirm">Enter your password to confirm</string>
+    <string name="enter_name">Enter name</string>
+    <string name="edit">Edit</string>
 </resources>
