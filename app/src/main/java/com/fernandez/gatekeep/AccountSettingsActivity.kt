@@ -101,8 +101,7 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
 
         updatePasswordBtn.setOnClickListener {
-            val dialog = dialogBuilder.create()
-            dialog.show()
+            showPasswordChangeDialog(it.context)
         }
 
         deleteAccountBtn.setOnClickListener {
@@ -411,6 +410,79 @@ class AccountSettingsActivity : AppCompatActivity() {
                 Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show()
             } else {
                 Toast.makeText(this, "Camera permission denied, Allow permission in app settings", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun changePassword(oldPassword: String, newPassword: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val credentials = EmailAuthProvider.getCredential(currentUser?.email!!, oldPassword)
+
+        currentUser.let {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    // Re-authenticate the user with their current email and password
+                    it.reauthenticate(credentials).await()
+
+                    // Change the password
+                    it.updatePassword(newPassword).await()
+
+                    Toast.makeText(
+                        this@AccountSettingsActivity,
+                        "Password changed successfully.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@AccountSettingsActivity,
+                        "Failed to change password: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+    private fun showPasswordChangeDialog(context: Context) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_password_change, null)
+
+        val dialogEtOldPassword = dialogView.findViewById<EditText>(R.id.old_password)
+        val dialogEtNewPassword = dialogView.findViewById<EditText>(R.id.new_password1)
+        val dialogETPasswordConfirmation = dialogView.findViewById<EditText>(R.id.new_password2)
+        val dialogChangePassword = dialogView.findViewById<Button>(R.id.ChangePassword)
+        val dialogCancel = dialogView.findViewById<Button>(R.id.cancel)
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(dialogView)
+            .show()
+
+        dialogCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogChangePassword.setOnClickListener {
+            val oldPassword = dialogEtOldPassword.text.toString().trim()
+            val newPassword = dialogEtNewPassword.text.toString().trim()
+            val passwordConfirmation = dialogETPasswordConfirmation.text.toString().trim()
+            if (oldPassword.isNotEmpty()) {
+                if (newPassword.isNotEmpty()) {
+                    if (passwordConfirmation.isNotEmpty()) {
+                        if (newPassword == passwordConfirmation) {
+                            changePassword(oldPassword, newPassword)
+                            dialog.dismiss()
+                        } else {
+                            Toast.makeText(
+                                this@AccountSettingsActivity,
+                                "New password and confirmation do not match.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        Toast.makeText(context, "Please enter confirmation password.", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Toast.makeText(context, "Please enter new password.", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                Toast.makeText(context, "Please enter your current password.", Toast.LENGTH_SHORT).show()
             }
         }
     }
