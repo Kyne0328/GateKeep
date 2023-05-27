@@ -23,7 +23,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginBottom="16dp"
             android:ellipsize="end"
-            android:text="@string/change_email_adress"
+            android:text="@string/change_email_address"
             android:textColor="@color/white"
             android:textSize="24sp"
             android:textStyle="bold" />
