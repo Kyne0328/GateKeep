@@ -1,8 +1,10 @@
 package com.fernandez.gatekeep
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -79,13 +81,6 @@ class AccountSettingsActivity : AppCompatActivity() {
 
         loadProfileImage()
 
-        val dialogBuilder = AlertDialog.Builder(this)
-        dialogBuilder.setTitle("Feature not yet implemented")
-        dialogBuilder.setMessage("This feature is currently under development and will be available in a future update.")
-        dialogBuilder.setPositiveButton("OK") { _, _ ->
-            // Dismiss the dialog
-        }
-
         mAuth = FirebaseAuth.getInstance()
         mUser = mAuth.currentUser!!
         mDatabaseRef = FirebaseDatabase.getInstance().reference.child("users").child(mUser.uid)
@@ -93,8 +88,7 @@ class AccountSettingsActivity : AppCompatActivity() {
         mStorageRef = FirebaseStorage.getInstance().reference.child("profiles")
 
         updateProfileBtn.setOnClickListener {
-            val dialog = dialogBuilder.create()
-            dialog.show()
+            showUpdateProfileDialog(it.context)
         }
 
         updateEmailBtn.setOnClickListener {
@@ -115,13 +109,13 @@ class AccountSettingsActivity : AppCompatActivity() {
             val userRef = FirebaseDatabase.getInstance().getReference("users")
                 .child(currentUserUid)
                 .child("name")
-            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            userRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val name = snapshot.getValue(String::class.java)
                     if (name != null) {
                         // Display the username in a TextView
                         val uname = findViewById<TextView>(R.id.UserName)
-                        uname.text = "$name"
+                        uname.text = name
                     }
                 }
 
@@ -501,6 +495,86 @@ class AccountSettingsActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+    @SuppressLint("SetTextI18n")
+    private fun showUpdateProfileDialog(context: Context) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_update_profile, null)
+
+        val dialogEditName = dialogView.findViewById<Button>(R.id.editName)
+        val dialogCancel = dialogView.findViewById<Button>(R.id.cancel)
+        val dialogEtName = dialogView.findViewById<EditText>(R.id.name)
+
+        dialogEtName.isEnabled = false
+
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserUid != null) {
+            val userRef = FirebaseDatabase.getInstance().getReference("users")
+                .child(currentUserUid)
+                .child("name")
+            userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val name = snapshot.getValue(String::class.java)
+                    if (name != null) {
+                        dialogEtName.setText(name)
+                    }
+                }
+
+                override fun onCancelled(databaseError: DatabaseError) {
+                    Toast.makeText(
+                        context,
+                        "Failed to load user data: ${databaseError.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
+        }
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(dialogView)
+            .show()
+
+        dialogCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogEditName.setOnClickListener {
+            if (dialogEtName.isEnabled) {
+                // User pressed "Done" button
+                dialogEtName.isEnabled = false
+                dialogEditName.text = "Edit"
+                updateInfo(dialogEtName.text.toString(), dialog)
+            } else {
+                // User pressed "Edit Name" button
+                dialogEtName.isEnabled = true
+                dialogEtName.requestFocus()
+                dialogEditName.text = "Done"
+            }
+        }
+    }
+    private fun updateInfo(newName: String, dialog: Dialog) {
+        val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUserUid != null) {
+            val userRef = FirebaseDatabase.getInstance().getReference("users")
+                .child(currentUserUid)
+                .child("name")
+
+            userRef.setValue(newName)
+                .addOnSuccessListener {
+                    Toast.makeText(
+                        applicationContext,
+                        "Name updated successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    dialog.dismiss()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(
+                        applicationContext,
+                        "Failed to update name: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
         }
     }
 }
