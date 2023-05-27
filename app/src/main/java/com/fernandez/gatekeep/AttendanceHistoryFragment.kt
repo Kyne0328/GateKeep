@@ -14,6 +14,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import java.util.Date
 import java.util.Locale
 
 
@@ -83,13 +84,13 @@ class AttendanceHistoryFragment : Fragment() {
         val inputFormat = SimpleDateFormat("dd-MM-yy", Locale.US)
         val outputFormat = SimpleDateFormat("MMMM d, yyyy", Locale.US)
         val inputDate = inputFormat.parse(date)
-        return outputFormat.format(inputDate)
+        return outputFormat.format(inputDate as Date)
     }
 
     private fun formatTime(time: String): String {
         val inputFormat = SimpleDateFormat("HH:mm:ss", Locale.US)
         val outputFormat = SimpleDateFormat("h:mm a", Locale.US)
         val inputTime = inputFormat.parse(time)
-        return outputFormat.format(inputTime)
+        return outputFormat.format(inputTime as Date)
     }
 }
