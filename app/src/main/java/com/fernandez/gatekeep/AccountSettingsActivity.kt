@@ -33,6 +33,7 @@ import com.canhub.cropper.CropImage.CancelledResult.bitmap
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -41,6 +42,10 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import jp.wasabeef.glide.transformations.RoundedCornersTransformation
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -62,7 +67,6 @@ class AccountSettingsActivity : AppCompatActivity() {
     private lateinit var cameraLauncher: ActivityResultLauncher<Intent>
     private var capturedImageUri: Uri? = null
     private val CAMERA_PERMISSION_CODE = 200
-    private var currentUserEmail: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,14 +92,6 @@ class AccountSettingsActivity : AppCompatActivity() {
         mStorageRef = FirebaseStorage.getInstance().reference.child("profiles")
 
         updateProfileBtn.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-                != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(
-                    this,
-                    arrayOf(Manifest.permission.CAMERA),
-                    CAMERA_PERMISSION_CODE
-                )
-            }
             val dialog = dialogBuilder.create()
             dialog.show()
         }
@@ -230,19 +226,28 @@ class AccountSettingsActivity : AppCompatActivity() {
     }
 
     private fun openCamera() {
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        val photoFile: File? = createImageFile()
-        // cameraIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION, 0)
-        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", 1)
-        photoFile?.let { file ->
-            val photoURI: Uri = FileProvider.getUriForFile(
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
                 this,
-                "com.fernandez.gatekeep.fileprovider",
-                file
+                arrayOf(Manifest.permission.CAMERA),
+                CAMERA_PERMISSION_CODE
             )
-            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-            capturedImageUri = photoURI // Store the URI in the capturedImageUri variable
-            cameraLauncher.launch(cameraIntent)
+        } else {
+            val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            val photoFile: File? = createImageFile()
+            // cameraIntent.putExtra(MediaStore.EXTRA_SCREEN_ORIENTATION, 0)
+            cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", 1)
+            photoFile?.let { file ->
+                val photoURI: Uri = FileProvider.getUriForFile(
+                    this,
+                    "com.fernandez.gatekeep.fileprovider",
+                    file
+                )
+                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+                capturedImageUri = photoURI // Store the URI in the capturedImageUri variable
+                cameraLauncher.launch(cameraIntent)
+            }
         }
     }
 
@@ -328,37 +333,49 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
-    private fun updateEmail(newEmail: String) {
-        val user = FirebaseAuth.getInstance().currentUser
-        currentUserEmail = user?.email
+    private fun updateEmail(newEmail: String, password: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val credentials = EmailAuthProvider.getCredential(currentUser?.email!!, password)
 
-        val credential = currentUserEmail?.let { EmailAuthProvider.getCredential(it, "") }
-        if (credential != null) {
-            mUser.reauthenticate(credential)
-                .addOnSuccessListener {
-                    mUser.updateEmail(newEmail)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                Toast.makeText(
-                                    this, "Email address updated successfully.", Toast.LENGTH_SHORT).show()
-                            } else {
-                                Toast.makeText(
-                                    this,
-                                    "Failed to update email address.", Toast.LENGTH_SHORT).show()
-                            }
-                        }
+        currentUser.let {
+            CoroutineScope(Dispatchers.Main).launch {
+                try {
+                    // Re-authenticate the user with their current email and password
+                    it.reauthenticate(credentials).await()
+
+                    // Update the email address
+                    it.updateEmail(newEmail).await()
+
+                    // Update the user's display name if needed
+                    val displayName = it.displayName
+                    val profileUpdates = UserProfileChangeRequest.Builder()
+                        .setDisplayName(displayName)
+                        .build()
+                    it.updateProfile(profileUpdates).await()
+
+                    Toast.makeText(
+                        this@AccountSettingsActivity,
+                        "Email address updated successfully.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } catch (e: Exception) {
+                    Toast.makeText(
+                        this@AccountSettingsActivity,
+                        "Failed to update email address: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Failed to reauthenticate.", Toast.LENGTH_SHORT).show()
-                }
+            }
         }
     }
+
 
     private fun showDialog(context: Context) {
         val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_email_change, null)
 
         val dialogTvCurrentEmailAddress = dialogView.findViewById<TextView>(R.id.CurrentEmailAddress)
         val dialogEtNewEmail = dialogView.findViewById<EditText>(R.id.NewEmail)
+        val dialogETPassword = dialogView.findViewById<EditText>(R.id.password)
         val dialogChangeEmail = dialogView.findViewById<Button>(R.id.ChangeEmail)
         val dialogCancel = dialogView.findViewById<Button>(R.id.cancel)
 
@@ -374,8 +391,9 @@ class AccountSettingsActivity : AppCompatActivity() {
 
         dialogChangeEmail.setOnClickListener {
             val newEmail = dialogEtNewEmail.text.toString().trim()
+            val password = dialogETPassword.text.toString().trim()
             if (newEmail.isNotEmpty()) {
-                updateEmail(newEmail)
+                updateEmail(newEmail, password)
                 dialog.dismiss()
             } else {
                 Toast.makeText(context, "Please enter a new email address.", Toast.LENGTH_SHORT).show()
@@ -392,8 +410,7 @@ class AccountSettingsActivity : AppCompatActivity() {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Camera permission granted", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(this, "Camera permission denied", Toast.LENGTH_SHORT).show()
-                finish()
+                Toast.makeText(this, "Camera permission denied, Allow permission in app settings", Toast.LENGTH_SHORT).show()
             }
         }
     }
