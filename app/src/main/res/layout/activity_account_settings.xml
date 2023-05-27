@@ -115,31 +115,7 @@
                     android:textColor="@android:color/white"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/currentEmailAddress" />
-
-                <EditText
-                    android:id="@+id/currentEmailAddress"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:autofillHints=""
-                    android:background="@drawable/background_edittext"
-                    android:ems="10"
-                    android:hint="@string/new_email"
-                    android:inputType="textEmailAddress"
-                    android:minHeight="48dp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:textAlignment="viewStart"
-                    android:textColor="@color/black"
-                    android:textSize="14sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/updateProfileBtn"
-                    tools:ignore="SpeakableTextPresentCheck"
-                    tools:text="@string/your_email" />
+                    app:layout_constraintTop_toBottomOf="@+id/updateProfileBtn" />
 
                 <Button
                     android:id="@+id/updatePasswordBtn"
