@@ -49,4 +49,8 @@
     <string name="banner">Banner</string>
     <string name="user_profile">User profile</string>
     <string name="new_email">New Email</string>
+    <string name="your_current_email_address_is">Your current email address is:</string>
+    <string name="change_email_address">Change Email Address</string>
+    <string name="enter_new_email_address">Enter new email address</string>
+    <string name="cancel">Cancel</string>
 </resources>
