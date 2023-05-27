@@ -473,7 +473,7 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
     }
     private fun showDeleteAccountDialog(context: Context) {
-        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_password, null)
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_account, null)
 
         val dialogETPassword = dialogView.findViewById<EditText>(R.id.password)
         val dialogDeleteAccount = dialogView.findViewById<Button>(R.id.deleteAccount)
