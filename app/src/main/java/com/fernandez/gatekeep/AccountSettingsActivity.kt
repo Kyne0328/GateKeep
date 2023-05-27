@@ -13,7 +13,6 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.text.InputType
 import android.view.LayoutInflater
 import android.widget.Button
 import android.widget.EditText
@@ -58,6 +57,7 @@ class AccountSettingsActivity : AppCompatActivity() {
     private lateinit var mUser: FirebaseUser
     private lateinit var mDatabaseRef: DatabaseReference
     private lateinit var mStorageRef: StorageReference
+    private lateinit var mStorageRef1: StorageReference
 
     private lateinit var changephoto: ImageView
     private lateinit var userProfileImageView: ImageView
@@ -89,6 +89,7 @@ class AccountSettingsActivity : AppCompatActivity() {
         mAuth = FirebaseAuth.getInstance()
         mUser = mAuth.currentUser!!
         mDatabaseRef = FirebaseDatabase.getInstance().reference.child("users").child(mUser.uid)
+        mStorageRef1 = FirebaseStorage.getInstance().reference.child("qr_codes").child("${mUser.uid}.jpg")
         mStorageRef = FirebaseStorage.getInstance().reference.child("profiles")
 
         updateProfileBtn.setOnClickListener {
@@ -105,37 +106,9 @@ class AccountSettingsActivity : AppCompatActivity() {
         }
 
         deleteAccountBtn.setOnClickListener {
-            val passwordDialog = AlertDialog.Builder(this)
-            passwordDialog.setTitle("Enter your password")
-            val passwordET = EditText(this)
-            passwordET.inputType =
-                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
-            passwordDialog.setView(passwordET)
-
-            passwordDialog.setPositiveButton("OK") { _, _ ->
-                val password = passwordET.text.toString()
-                if (password.isEmpty()) {
-                    Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show()
-                    return@setPositiveButton
-                }
-                val credential = EmailAuthProvider.getCredential(mUser.email!!, password)
-                mUser.reauthenticate(credential)
-                    .addOnSuccessListener {
-                        val confirmDialog = AlertDialog.Builder(this)
-                        confirmDialog.setTitle("Are you sure you want to delete your account?")
-                        confirmDialog.setPositiveButton("Delete") { _, _ ->
-                            deleteAccount()
-                        }
-                        confirmDialog.setNegativeButton("Cancel", null)
-                        confirmDialog.show()
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(this, "Incorrect password", Toast.LENGTH_SHORT).show()
-                    }
-            }
-            passwordDialog.setNegativeButton("Cancel", null)
-            passwordDialog.show()
+            showDeleteAccountDialog(it.context)
         }
+
         val currentUserUid = FirebaseAuth.getInstance().currentUser?.uid
         if (currentUserUid != null) {
             // Retrieve user's name from the 'users' node
@@ -317,13 +290,26 @@ class AccountSettingsActivity : AppCompatActivity() {
         return Uri.fromFile(tempFile)
     }
     private fun deleteAccount() {
-        mUser.delete()
+        mDatabaseRef.removeValue()
             .addOnSuccessListener {
-                Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show()
-                finish()
+                mStorageRef1.delete()
+                    .addOnSuccessListener {
+                        mUser.delete()
+                        .addOnSuccessListener {
+                        Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this@AccountSettingsActivity, FirstLoginActivity::class.java))
+                            finish()
+                    }
+                        .addOnFailureListener {
+                            Toast.makeText(this, "Failed to delete account", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Failed to delete account storage", Toast.LENGTH_SHORT).show()
+                    }
             }
             .addOnFailureListener {
-                Toast.makeText(this, "Failed to delete account", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to delete account database", Toast.LENGTH_SHORT).show()
             }
     }
     private fun rotateImage(bitmap: Bitmap, degrees: Int): Bitmap {
@@ -483,6 +469,37 @@ class AccountSettingsActivity : AppCompatActivity() {
                 }
             } else {
                 Toast.makeText(context, "Please enter your current password.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+    private fun showDeleteAccountDialog(context: Context) {
+        val dialogView = LayoutInflater.from(context).inflate(R.layout.dialog_delete_password, null)
+
+        val dialogETPassword = dialogView.findViewById<EditText>(R.id.password)
+        val dialogDeleteAccount = dialogView.findViewById<Button>(R.id.deleteAccount)
+        val dialogCancel = dialogView.findViewById<Button>(R.id.cancel)
+
+        val dialog = AlertDialog.Builder(context)
+            .setView(dialogView)
+            .show()
+
+        dialogCancel.setOnClickListener {
+            dialog.dismiss()
+        }
+
+        dialogDeleteAccount.setOnClickListener {
+            val dialogPassword = dialogETPassword.text.toString().trim()
+            if (dialogPassword.isNotEmpty()) {
+                val credential = EmailAuthProvider.getCredential(mUser.email!!, dialogPassword)
+                mUser.reauthenticate(credential)
+                    .addOnSuccessListener {
+                            deleteAccount()
+                        }
+                    .addOnFailureListener {
+                        Toast.makeText(this, "Incorrect password", Toast.LENGTH_SHORT).show()
+                    }
+            } else {
+                Toast.makeText(this, "Please enter your password", Toast.LENGTH_SHORT).show()
             }
         }
     }
