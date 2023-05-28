@@ -70,7 +70,6 @@ class RegisterActivity : AppCompatActivity() {
             }
 
             override fun onNothingSelected(parent: AdapterView<*>) {
-                // Handle case where nothing is selected (if needed)
             }
         }
 
