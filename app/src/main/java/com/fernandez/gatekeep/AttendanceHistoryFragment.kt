@@ -207,8 +207,6 @@ class AttendanceHistoryFragment : Fragment() {
                     headerRow.createCell(3).setCellValue("Time")
                     headerRow.createCell(4).setCellValue("Date")
 
-                    val rowDataList = mutableListOf<List<Any?>>()
-
                     // Initialize a counter variable
                     var retrievedCount = 0
 
@@ -229,31 +227,31 @@ class AttendanceHistoryFragment : Fragment() {
 
                                         if (shouldIncludeAttendance(grade, section, attendanceGrade, attendanceSection)) {
                                             val name = it["name"] as? String
-                                            val time = it["time"] as? Long
-                                            val date = it["date"] as? Long
+                                            val time = it["time"] as? String
+                                            val date = it["date"] as? String
 
                                             if (name != null && time != null && date != null) {
-                                                val formattedTime1 = formatTime(time.toString())
-                                                val formattedDate1 = formatDate(date.toString())
+                                                val formattedTime1 = formatTime(time)
+                                                val formattedDate1 = formatDate(date)
 
-                                                val rowData = listOf(name, attendanceSection ?: "", attendanceGrade ?: "", formattedTime1, formattedDate1)
-                                                rowDataList.add(rowData)
+                                                val rowData = mutableListOf<Any?>()
+                                                rowData.add(name)
+                                                rowData.add(attendanceSection ?: "")
+                                                rowData.add(attendanceGrade ?: "")
+                                                rowData.add(formattedTime1)
+                                                rowData.add(formattedDate1)
+
+                                                val newRow = sheet.createRow(retrievedCount)
+                                                for ((index, value) in rowData.withIndex()) {
+                                                    newRow.createCell(index).setCellValue(value?.toString() ?: "")
+                                                }
                                             }
                                         }
                                     }
                                 }
 
                                 // Check if all attendance data has been retrieved
-                                if (rowDataList.size == retrievedCount) {
-                                    // Write attendance data to the Excel sheet
-                                    for ((index, rowData) in rowDataList.withIndex()) {
-                                        val newRow = sheet.createRow(index + 1)
-
-                                        rowData.forEachIndexed { cellIndex, value ->
-                                            newRow.createCell(cellIndex).setCellValue(value.toString())
-                                        }
-                                    }
-
+                                if (retrievedCount == dataSnapshot.childrenCount.toInt()) {
                                     val filename = getFilename(grade, section)
                                     val file = File(context.cacheDir, filename)
 
@@ -262,7 +260,7 @@ class AttendanceHistoryFragment : Fragment() {
                                     var counter = 1
                                     while (renamedFile.exists()) {
                                         val newFilename = getRenamedFilename(grade, section, counter)
-                                        renamedFile = File(context.cacheDir, newFilename)
+                                        File(context.cacheDir, newFilename).also { renamedFile = it }
                                         counter++
                                     }
 
