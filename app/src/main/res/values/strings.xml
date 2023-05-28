@@ -62,4 +62,10 @@
     <string name="enter_your_password_to_confirm">Enter your password to confirm</string>
     <string name="enter_name">Enter name</string>
     <string name="edit">Edit</string>
+    <string name="export_to_excel">Export to excel</string>
+    <string name="select_individual_grade_and_section_if_needed">Select individual grade and section if needed</string>
+    <string name="grade">Grade</string>
+    <string name="export">Export</string>
+    <string name="you_can_export_the_data_on_this_page">You can export the data on this page</string>
+    <string name="section">Section</string>
 </resources>
