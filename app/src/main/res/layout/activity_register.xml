@@ -183,18 +183,19 @@ tools:context=".LoginActivity">
 
         <Button
             android:id="@+id/btn_register"
+            style="@android:style/Widget.Button"
             android:layout_width="match_parent"
             android:layout_height="55dp"
-            android:baselineAligned="false"
             android:layout_marginStart="32dp"
-            android:layout_marginEnd="32dp"
             android:layout_marginTop="32dp"
+            android:layout_marginEnd="32dp"
+            android:layout_marginBottom="32dp"
+            android:background="@drawable/background_btn_1"
+            android:baselineAligned="false"
+            android:text="@string/register"
+            android:textColor="#ffffff"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#ffffff"
-            style="@android:style/Widget.Button"
-            android:background="@drawable/background_btn_1"
-            android:text="@string/register"
             tools:ignore="VisualLintButtonSize" />
 
     </LinearLayout>
