@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
+import android.os.Environment
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -25,6 +26,8 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import java.io.File
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -35,6 +38,7 @@ class AttendanceHistoryFragment : Fragment() {
     private lateinit var rvAttendance: RecyclerView
     private lateinit var attendanceHistoryAdapter: AttendanceHistoryAdapter
     private val attendanceList = mutableListOf<AttendanceAdmin>()
+    private var exportToExcel: ImageView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -91,9 +95,8 @@ class AttendanceHistoryFragment : Fragment() {
                 ).show()
             }
         })
-        val exportToExcel = view.findViewById<ImageView>(R.id.btn_register)
-
-        exportToExcel.setOnClickListener {
+        exportToExcel = view.findViewById(R.id.exportToExcel)
+        exportToExcel?.setOnClickListener {
             showExportToExcelDialog(requireContext())
         }
     }
@@ -124,6 +127,9 @@ class AttendanceHistoryFragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGrade.adapter = adapter
 
+        // Set up the section spinner with the "All" option initially
+        setUpSectionSpinner(context, sectionSpinner, arrayOf("All"))
+
         spinnerGrade.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             @SuppressLint("DiscouragedApi")
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
@@ -131,7 +137,7 @@ class AttendanceHistoryFragment : Fragment() {
                 if (selectedGrade == "All") {
                     // Disable the section spinner and set its value to "All"
                     sectionSpinner.isEnabled = false
-                    sectionSpinner.setSelection(0)
+                    setUpSectionSpinner(context, sectionSpinner, arrayOf("All"))
                 } else {
                     // Set the section spinner based on the selected grade
                     sectionSpinner.isEnabled = true
@@ -143,13 +149,16 @@ class AttendanceHistoryFragment : Fragment() {
                         )
                         context.resources.getStringArray(sectionArrayResourceId)
                     } else {
-                        arrayOf("All")
+                        emptyArray()
                     }
 
-                    val allSections = arrayOf("All") + sectionArray
-                    val sectionAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, allSections)
-                    sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                    sectionSpinner.adapter = sectionAdapter
+                    // Set up the section spinner with the appropriate options
+                    setUpSectionSpinner(context, sectionSpinner, sectionArray)
+
+                    // Automatically select "All" option if the section array is empty
+                    if (sectionArray.isEmpty()) {
+                        sectionSpinner.setSelection(0) // Select "All" option
+                    }
                 }
             }
 
@@ -168,11 +177,17 @@ class AttendanceHistoryFragment : Fragment() {
         dialogBtnExport.setOnClickListener {
             val selectedGrade = spinnerGrade.selectedItem.toString()
             val selectedSection = sectionSpinner.selectedItem.toString()
-
             exportAttendanceToExcel(context, selectedGrade, selectedSection)
-
             dialog.dismiss()
         }
+    }
+
+    private fun setUpSectionSpinner(context: Context, sectionSpinner: Spinner, sectionArray: Array<String>) {
+        val allSections = arrayOf("All") + sectionArray
+        val sectionAdapter = ArrayAdapter(context, android.R.layout.simple_spinner_item, allSections)
+        sectionAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        sectionSpinner.adapter = sectionAdapter
+        sectionSpinner.setSelection(0) // Select "All" option
     }
 
     private fun exportAttendanceToExcel(context: Context, grade: String, section: String) {
@@ -183,9 +198,8 @@ class AttendanceHistoryFragment : Fragment() {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
                 if (dataSnapshot.exists()) {
                     val workbook = XSSFWorkbook()
-                    val sheet = workbook.createSheet("Attendance")
-
-                    // Write the header row
+                    val sheetName = getSheetName(grade, section)
+                    val sheet = workbook.createSheet(sheetName)
                     val headerRow = sheet.createRow(0)
                     headerRow.createCell(0).setCellValue("Name")
                     headerRow.createCell(1).setCellValue("Section")
@@ -193,50 +207,87 @@ class AttendanceHistoryFragment : Fragment() {
                     headerRow.createCell(3).setCellValue("Time")
                     headerRow.createCell(4).setCellValue("Date")
 
-                    // Iterate over the attendance data
-                    for (attendanceSnapshot in dataSnapshot.children) {
-                        val attendanceData = attendanceSnapshot.value as HashMap<*, *>
-                        val attendanceGrade = attendanceData["grade"] as String
-                        val attendanceSection = attendanceData["section"] as String
+                    val rowDataList = mutableListOf<List<Any?>>()
 
-                        // Check if the attendance record matches the selected grade and section
-                        if (grade == "All" || (attendanceGrade == grade && (section == "All" || attendanceSection == section))) {
-                            val name = attendanceData["name"] as String
-                            val time = attendanceData["time"] as String
-                            val date = attendanceData["date"] as String
+                    // Initialize a counter variable
+                    var retrievedCount = 0
 
-                            // Create a new row
-                            val row = sheet.createRow(sheet.lastRowNum + 1)
-                            row.createCell(0).setCellValue(name)
-                            row.createCell(1).setCellValue(attendanceSection)
-                            row.createCell(2).setCellValue(attendanceGrade)
-                            row.createCell(3).setCellValue(time)
-                            row.createCell(4).setCellValue(date)
-                        }
+                    for (userSnapshot in dataSnapshot.children) {
+                        val userAttendanceRef = userSnapshot.ref
+
+                        userAttendanceRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(userAttendanceSnapshot: DataSnapshot) {
+                                // Increment the counter for each user attendance data retrieved
+                                retrievedCount++
+
+                                for (attendanceSnapshot in userAttendanceSnapshot.children) {
+                                    val attendanceData = attendanceSnapshot.value as? HashMap<*, *>
+
+                                    attendanceData?.let {
+                                        val attendanceGrade = it["grade"] as? String
+                                        val attendanceSection = it["section"] as? String
+
+                                        if (shouldIncludeAttendance(grade, section, attendanceGrade, attendanceSection)) {
+                                            val name = it["name"] as? String
+                                            val time = it["time"] as? Long
+                                            val date = it["date"] as? Long
+
+                                            if (name != null && time != null && date != null) {
+                                                val formattedTime1 = formatTime(time.toString())
+                                                val formattedDate1 = formatDate(date.toString())
+
+                                                val rowData = listOf(name, attendanceSection ?: "", attendanceGrade ?: "", formattedTime1, formattedDate1)
+                                                rowDataList.add(rowData)
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Check if all attendance data has been retrieved
+                                if (rowDataList.size == retrievedCount) {
+                                    // Write attendance data to the Excel sheet
+                                    for ((index, rowData) in rowDataList.withIndex()) {
+                                        val newRow = sheet.createRow(index + 1)
+
+                                        rowData.forEachIndexed { cellIndex, value ->
+                                            newRow.createCell(cellIndex).setCellValue(value.toString())
+                                        }
+                                    }
+
+                                    val filename = getFilename(grade, section)
+                                    val file = File(context.cacheDir, filename)
+
+                                    // Rename the file if it already exists
+                                    var renamedFile = file
+                                    var counter = 1
+                                    while (renamedFile.exists()) {
+                                        val newFilename = getRenamedFilename(grade, section, counter)
+                                        renamedFile = File(context.cacheDir, newFilename)
+                                        counter++
+                                    }
+
+                                    val fileUri = Uri.fromFile(renamedFile)
+                                    val outputStream = context.contentResolver.openOutputStream(fileUri)
+
+                                    workbook.write(outputStream)
+                                    outputStream?.close()
+                                    workbook.close()
+
+                                    val downloadsDirectory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+                                    val targetFile = File(downloadsDirectory, renamedFile.name)
+                                    Files.copy(renamedFile.toPath(), targetFile.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                                    renamedFile.delete()
+
+                                    val message = "Attendance exported to Excel.\nFile saved in: ${targetFile.absolutePath}"
+                                    showSuccessDialog(context, message)
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.e("ExportAttendance", "Failed to read user attendance data: ${error.message}")
+                            }
+                        })
                     }
-
-                    // Generate the filename based on the selected grade and section
-                    val filename = if (grade == "All" && section == "All") {
-                        "gatekeep_all.xlsx"
-                    } else if (grade == "All") {
-                        "gatekeep_all_${section}.xlsx"
-                    } else if (section == "All") {
-                        "gatekeep_${grade}_all.xlsx"
-                    } else {
-                        "gatekeep_${grade}_${section}.xlsx"
-                    }
-
-                    // Save the workbook to a file
-                    val fileUri = Uri.fromFile(File(context.cacheDir, filename))
-                    val outputStream = context.contentResolver.openOutputStream(fileUri)
-                    workbook.write(outputStream)
-                    outputStream?.close()
-
-                    // Close the workbook
-                    workbook.close()
-
-                    // Show a success message to the user
-                    Toast.makeText(context, "Attendance exported to Excel", Toast.LENGTH_SHORT).show()
                 }
             }
 
@@ -244,5 +295,43 @@ class AttendanceHistoryFragment : Fragment() {
                 Log.e("ExportAttendance", "Failed to read attendance data: ${error.message}")
             }
         })
+    }
+    private fun getRenamedFilename(grade: String, section: String, counter: Int): String {
+        val originalFilename = getFilename(grade, section)
+        val extension = originalFilename.substringAfterLast(".")
+        val baseName = originalFilename.substringBeforeLast(".")
+        return "$baseName($counter).$extension"
+    }
+
+
+
+    private fun getSheetName(grade: String, section: String): String {
+        return when {
+            grade == "All" && section == "All" -> "Entry Record (All)"
+            grade == "All" -> "Entry Record ($section)"
+            section == "All" -> "Entry Record ($grade)"
+            else -> "Entry Record ($grade - $section)"
+        }
+    }
+
+    private fun shouldIncludeAttendance(selectedGrade: String, selectedSection: String, attendanceGrade: String?, attendanceSection: String?): Boolean {
+        return (selectedGrade == "All" || attendanceGrade == selectedGrade || attendanceGrade == "Grade $selectedGrade")
+                && (selectedSection == "All" || attendanceSection == selectedSection)
+    }
+
+    private fun getFilename(grade: String, section: String): String {
+        return when {
+            grade == "All" && section == "All" -> "gatekeep_all.xlsx"
+            grade == "All" -> "gatekeep_all_${section}.xlsx"
+            section == "All" -> "gatekeep_${grade}_all.xlsx"
+            else -> "gatekeep_${grade}_${section}.xlsx"
+        }
+    }
+    private fun showSuccessDialog(context: Context, message: String) {
+        AlertDialog.Builder(context)
+            .setTitle("Export Success")
+            .setMessage(message)
+            .setPositiveButton("OK") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 }
