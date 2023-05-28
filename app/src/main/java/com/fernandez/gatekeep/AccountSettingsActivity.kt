@@ -243,6 +243,8 @@ class AccountSettingsActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 loadProfileImage()
                 Toast.makeText(this, "Profile image updated successfully", Toast.LENGTH_SHORT).show()
+                val cachedImageFile = File(imageUri.path.toString())
+                cachedImageFile.delete()
             }
             .addOnFailureListener {
                 Toast.makeText(this, "Failed to upload image", Toast.LENGTH_SHORT).show()
