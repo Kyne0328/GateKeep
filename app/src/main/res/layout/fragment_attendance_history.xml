@@ -18,13 +18,21 @@
 
         <TextView
             android:id="@+id/general_textview"
-            android:layout_width="wrap_content"
+            android:layout_width="343dp"
             android:layout_height="wrap_content"
             android:layout_gravity="center_vertical"
             android:layout_marginStart="16dp"
             android:text="@string/history"
             android:textColor="@color/white"
             android:textSize="18sp" />
+
+        <ImageView
+            android:id="@+id/exportToExcel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:src="@drawable/baseline_file_download_24"
+            android:contentDescription="@string/export_to_excel" />
 
     </LinearLayout>
 
