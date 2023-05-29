@@ -9,6 +9,8 @@
         android:title="@string/history"
         android:icon="@android:drawable/ic_menu_recent_history" />
 
+    <item android:title="@string/pending"
+        android:icon="@drawable/baseline_pending_actions_24" />
     <item
         android:title="@string/settings"
         android:icon="@drawable/outline_settings_24"/>
