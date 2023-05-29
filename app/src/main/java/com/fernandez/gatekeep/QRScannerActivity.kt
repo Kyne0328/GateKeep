@@ -48,6 +48,14 @@ class QRScannerActivity : AppCompatActivity() {
                     }
                 }
                 2 -> {
+                    val pendingFragment = fragmentManager.findFragmentByTag("pending_fragment")
+                    if (pendingFragment == null) {
+                        fragmentTransaction.add(R.id.fragment_container, PendingSignUpFragment(), "pending_fragment")
+                    } else {
+                        fragmentTransaction.show(pendingFragment)
+                    }
+                }
+                3 -> {
                     val settingsFragment = fragmentManager.findFragmentByTag("settings_fragment")
                     if (settingsFragment == null) {
                         fragmentTransaction.add(R.id.fragment_container, SettingsFragment(), "settings_fragment")
