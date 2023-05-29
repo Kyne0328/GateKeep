@@ -124,6 +124,33 @@ tools:context=".LoginActivity">
             android:minHeight="48dp"
             android:padding="8dp" />
 
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="32dp"
+            android:text="@string/learners_reference_number_lrn"
+            android:textColor="#2f3363"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <EditText
+            android:id="@+id/et_lrn"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="32dp"
+            android:autofillHints=""
+            android:background="@drawable/background_edittext"
+            android:ems="10"
+            android:hint="@string/enter_your_lrn"
+            android:inputType="textEmailAddress"
+            android:minHeight="48dp"
+            android:padding="8dp"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            tools:ignore="VisualLintTextFieldSize" />
 
         <TextView
             android:layout_width="match_parent"
