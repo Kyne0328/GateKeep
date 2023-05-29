@@ -77,6 +77,7 @@ class RegisterActivity : AppCompatActivity() {
         val etEmail = findViewById<EditText>(R.id.et_email)
         val etPassword = findViewById<EditText>(R.id.et_password)
         val btnRegister = findViewById<Button>(R.id.btn_register)
+        val etLRN = findViewById<EditText>(R.id.et_lrn)
 
         btnRegister.setOnClickListener {
             val name = etName.text.toString().trim()
@@ -84,7 +85,9 @@ class RegisterActivity : AppCompatActivity() {
             val section = sectionSpinner.selectedItem.toString().trim()
             val password = etPassword.text.toString().trim()
             val selectedGrade = spinnerGrade.selectedItem as String
+            val lrn = etLRN.text.toString().trim()
             val isAdmin = false
+            val isApproved = false
 
             // Check if any of the fields is empty
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
@@ -124,7 +127,7 @@ class RegisterActivity : AppCompatActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                     // Save user's name and admin status in Firebase Database
-                    saveUserName(user, name, selectedGrade, section, isAdmin)
+                    saveUserName(user, name, selectedGrade, section, isAdmin, lrn, isApproved)
                     loadingOverlay.visibility = View.GONE
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                     finish()
@@ -142,7 +145,7 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun saveUserName(user: FirebaseUser?, name: String, selectedGrade: String, section: String, isAdmin: Boolean) {
+    private fun saveUserName(user: FirebaseUser?, name: String, selectedGrade: String, section: String, isAdmin: Boolean, lrn: String, isApproved: Boolean) {
         user?.let {
             // Generate QR code and convert to Bitmap
             val qrData = "${user.uid},$name,$selectedGrade,$section"
@@ -163,8 +166,10 @@ class RegisterActivity : AppCompatActivity() {
                     val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
                     databaseRef.child("name").setValue(name).await()
                     databaseRef.child("isAdmin").setValue(isAdmin).await()
+                    databaseRef.child("isApproved").setValue(isApproved).await()
                     databaseRef.child("grade").setValue(selectedGrade).await()
                     databaseRef.child("section").setValue(section).await()
+                    databaseRef.child("lrn").setValue(lrn).await()
 
                     // Log success message
                     Log.d(TAG, "QR code saved to Firebase Storage")
