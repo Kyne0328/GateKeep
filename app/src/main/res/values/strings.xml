@@ -70,4 +70,5 @@
     <string name="section">Section</string>
     <string name="learners_reference_number_lrn">Learners Reference Number(LRN)</string>
     <string name="enter_your_lrn">Enter your LRN</string>
+    <string name="edit_name">Edit Name</string>
 </resources>
