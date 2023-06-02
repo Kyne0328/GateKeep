@@ -8,5 +8,5 @@ data class Pending(
     var lrn: String,
     val userId: String,
     val fcmToken: String,
-    var rejected: Boolean
+    var rejected: Boolean?
 )
