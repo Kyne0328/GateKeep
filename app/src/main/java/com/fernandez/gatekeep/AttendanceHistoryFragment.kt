@@ -127,7 +127,6 @@ class AttendanceHistoryFragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerGrade.adapter = adapter
 
-        // Set up the section spinner with the "All" option initially
         setUpSectionSpinner(context, sectionSpinner, arrayOf("All"))
 
         spinnerGrade.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
@@ -135,11 +134,9 @@ class AttendanceHistoryFragment : Fragment() {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 val selectedGrade = parent.getItemAtPosition(position).toString()
                 if (selectedGrade == "All") {
-                    // Disable the section spinner and set its value to "All"
                     sectionSpinner.isEnabled = false
                     setUpSectionSpinner(context, sectionSpinner, arrayOf("All"))
                 } else {
-                    // Set the section spinner based on the selected grade
                     sectionSpinner.isEnabled = true
                     val sectionArray = if (position > 0) {
                         val sectionArrayResourceId = context.resources.getIdentifier(
@@ -152,12 +149,10 @@ class AttendanceHistoryFragment : Fragment() {
                         emptyArray()
                     }
 
-                    // Set up the section spinner with the appropriate options
                     setUpSectionSpinner(context, sectionSpinner, sectionArray)
 
-                    // Automatically select "All" option if the section array is empty
                     if (sectionArray.isEmpty()) {
-                        sectionSpinner.setSelection(0) // Select "All" option
+                        sectionSpinner.setSelection(0)
                     }
                 }
             }
@@ -209,6 +204,7 @@ class AttendanceHistoryFragment : Fragment() {
 
                     // Initialize a counter variable
                     var retrievedCount = 0
+                    var rowCount = 0
 
                     for (userSnapshot in dataSnapshot.children) {
                         val userAttendanceRef = userSnapshot.ref
@@ -229,6 +225,7 @@ class AttendanceHistoryFragment : Fragment() {
                                             val name = it["name"] as? String
                                             val time = it["time"] as? String
                                             val date = it["date"] as? String
+                                            rowCount++
 
                                             if (name != null && time != null && date != null) {
                                                 val formattedTime1 = formatTime(time)
@@ -241,9 +238,11 @@ class AttendanceHistoryFragment : Fragment() {
                                                 rowData.add(formattedTime1)
                                                 rowData.add(formattedDate1)
 
-                                                val newRow = sheet.createRow(retrievedCount)
+                                                val newRow = sheet.createRow(rowCount)
                                                 for ((index, value) in rowData.withIndex()) {
                                                     newRow.createCell(index).setCellValue(value?.toString() ?: "")
+                                                    val textLength = value?.toString()?.length ?: 0
+                                                    sheet.setColumnWidth(index, (textLength + 5) * 256)
                                                 }
                                             }
                                         }
@@ -255,12 +254,18 @@ class AttendanceHistoryFragment : Fragment() {
                                     val filename = getFilename(grade, section)
                                     val file = File(context.cacheDir, filename)
 
-                                    // Rename the file if it already exists
                                     var renamedFile = file
                                     var counter = 1
                                     while (renamedFile.exists()) {
-                                        val newFilename = getRenamedFilename(grade, section, counter)
-                                        File(context.cacheDir, newFilename).also { renamedFile = it }
+                                        renamedFile = if (counter > 1) {
+                                            val newFilename = getRenamedFilename(grade, section,
+                                                counter.toString()
+                                            )
+                                            File(context.cacheDir, newFilename)
+                                        } else {
+                                            val newFilename = getRenamedFilename(grade, section, "")
+                                            File(context.cacheDir, newFilename)
+                                        }
                                         counter++
                                     }
 
@@ -294,7 +299,8 @@ class AttendanceHistoryFragment : Fragment() {
             }
         })
     }
-    private fun getRenamedFilename(grade: String, section: String, counter: Int): String {
+
+    private fun getRenamedFilename(grade: String, section: String, counter: String): String {
         val originalFilename = getFilename(grade, section)
         val extension = originalFilename.substringAfterLast(".")
         val baseName = originalFilename.substringBeforeLast(".")
