@@ -164,8 +164,12 @@ class RegisterActivity : AppCompatActivity() {
                     qrCodeRef.putBytes(data).await()
 
                     // Save user name and admin status to Firebase Realtime Database
-                    val fcmToken = FirebaseMessaging.getInstance().token
-                    val token = fcmToken.result
+                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        val token = task.result
+                        val databaseRef =
+                            FirebaseDatabase.getInstance().getReference("users/${user.uid}")
+                        databaseRef.child("fcmToken").setValue(token)
+                    }
                     val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
                     databaseRef.child("name").setValue(name).await()
                     databaseRef.child("isAdmin").setValue(isAdmin).await()
@@ -173,7 +177,6 @@ class RegisterActivity : AppCompatActivity() {
                     databaseRef.child("grade").setValue(selectedGrade).await()
                     databaseRef.child("section").setValue(section).await()
                     databaseRef.child("lrn").setValue(lrn).await()
-                    databaseRef.child("fcmToken").setValue(token).await()
 
                     // Log success message
                     Log.d(TAG, "QR code saved to Firebase Storage")
