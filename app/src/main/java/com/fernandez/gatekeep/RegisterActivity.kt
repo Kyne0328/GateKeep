@@ -167,8 +167,7 @@ class RegisterActivity : AppCompatActivity() {
                     val fcmToken = FirebaseMessaging.getInstance().token
                     val token = fcmToken.result
                     val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
-                    val fcmTokenRef = databaseRef.child("fcmToken")
-                    fcmTokenRef.setValue(token)
+                    databaseRef.child("fcmToken").setValue(token).await()
                     databaseRef.child("name").setValue(name).await()
                     databaseRef.child("isAdmin").setValue(isAdmin).await()
                     databaseRef.child("isApproved").setValue(isApproved).await()
