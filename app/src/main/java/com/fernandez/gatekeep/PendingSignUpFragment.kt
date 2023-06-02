@@ -50,10 +50,11 @@ class PendingSignUpFragment : Fragment() {
                     val lrn = pendingData?.get("lrn") as? String ?: "null"
                     val userID = userSnapshot.key ?: "null"
                     val fcmToken = pendingData?.get("fcmToken") as? String ?: "null"
-                    val isApproved = pendingData?.get("isApproved") as? Boolean ?: "null"
-                    val isRejected = pendingData?.get("isRejected") as? Boolean ?: "null"
+                    val isApproved = pendingData?.get("isApproved") as? Boolean
+                    val isRejected = pendingData?.get("isRejected") as? Boolean
 
-                    if (name == "null" || lrn == "null" || isApproved == "null" || isApproved == "true" || isRejected == "true" || grade == "null" || section == "null") {
+
+                    if (name == "null" || lrn == "null" || isApproved == null || isApproved == true || isRejected == true || grade == "null" || section == "null") {
                         continue
                     }
 
@@ -61,11 +62,12 @@ class PendingSignUpFragment : Fragment() {
                         name,
                         section,
                         grade,
-                        isApproved as Boolean,
+                        isApproved,
                         lrn,
                         userID,
                         fcmToken,
-                    isRejected as Boolean)
+                        isRejected
+                    )
                     pendingList.add(pending)
                 }
                 pendingAdapter.notifyDataSetChanged()
