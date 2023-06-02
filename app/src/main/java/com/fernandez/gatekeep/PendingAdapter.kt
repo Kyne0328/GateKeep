@@ -135,9 +135,9 @@ class PendingAdapter(private val pendingList: MutableList<Pending>) : RecyclerVi
         }
     }
 
-    private fun sendFCMNotification(token: String?, title: String, message: String) {
+    private fun sendFCMNotification(token: String, title: String, message: String) {
         FirebaseMessaging.getInstance().send(
-            RemoteMessage.Builder(token.toString())
+            RemoteMessage.Builder(token)
                 .setMessageId(UUID.randomUUID().toString())
                 .addData("title", title)
                 .addData("message", message)
