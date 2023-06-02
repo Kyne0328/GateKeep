@@ -1,7 +1,9 @@
 package com.fernandez.gatekeep
 
 import android.Manifest
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -14,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.content.ContextCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -25,6 +28,7 @@ import me.ibrahimsn.lib.SmoothBottomBar
 
 class MainActivity : AppCompatActivity() {
 
+    private val WRITE_PERMISSION_REQUEST_CODE = 1001
     private lateinit var smoothbottombar: SmoothBottomBar
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
@@ -40,6 +44,11 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         showSettingDialog()
                     }
+                }
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!hasWritePermission()) {
+                    requestWritePermission()
                 }
             }
         }
@@ -253,5 +262,14 @@ class MainActivity : AppCompatActivity() {
             }
             .setCancelable(false)
             .show()
+    }
+    private fun hasWritePermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+    }
+
+    private fun requestWritePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            requestPermissions(arrayOf(WRITE_EXTERNAL_STORAGE), WRITE_PERMISSION_REQUEST_CODE)
+        }
     }
 }
