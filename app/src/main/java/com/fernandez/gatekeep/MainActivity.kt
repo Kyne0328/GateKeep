@@ -201,23 +201,7 @@ class MainActivity : AppCompatActivity() {
                         fragmentTransaction.commit()
                     }
                 } else if (approvalStatus == false && rejectionStatus == true) {
-                    showAccountRejectedDialog()
-
-                    val currentUser = auth.currentUser
-                    currentUser?.delete()?.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            usersRef.child(uid).removeValue()
-                            auth.signOut()
-                            startActivity(Intent(this@MainActivity, FirstLoginActivity::class.java))
-                            finish()
-                        } else {
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Failed to delete account: ${task.exception?.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
+                    showAccountRejectedDialog(uid)
                 } else {
                     showAccountPendingDialog()
                 }
@@ -233,11 +217,28 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    private fun showAccountRejectedDialog() {
+    private fun showAccountRejectedDialog(uid: String) {
         AlertDialog.Builder(this)
             .setTitle("Account Rejected")
             .setMessage("Your account has been rejected. Please register again with the correct details.")
-            .setPositiveButton("OK", null)
+            .setPositiveButton("OK") { dialog, _ ->
+                val currentUser = auth.currentUser
+                currentUser?.delete()?.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        usersRef.child(uid).removeValue()
+                        auth.signOut()
+                        startActivity(Intent(this@MainActivity, FirstLoginActivity::class.java))
+                        finish()
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to delete account: ${task.exception?.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+                dialog.dismiss()
+            }
             .setCancelable(false)
             .show()
     }
