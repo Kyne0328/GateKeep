@@ -1,16 +1,24 @@
 package com.fernandez.gatekeep
 
+import android.Manifest
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
 import android.view.View
 import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import me.ibrahimsn.lib.SmoothBottomBar
@@ -21,6 +29,48 @@ class MainActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
     private lateinit var loadingOverlay: ProgressBar
+    private lateinit var usersRef: DatabaseReference
+    private val notificationPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+            hasNotificationPermissionGranted = isGranted
+            if (!isGranted) {
+                if (Build.VERSION.SDK_INT >= 33) {
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) {
+                        showNotificationPermissionRationale()
+                    } else {
+                        showSettingDialog()
+                    }
+                }
+            }
+        }
+
+    private fun showSettingDialog() {
+        MaterialAlertDialogBuilder(this, com.google.android.material.R.style.MaterialAlertDialog_Material3)
+            .setTitle("Notification Permission")
+            .setMessage("Notification permission is required. Please allow notification permission from settings.")
+            .setPositiveButton("OK") { _, _ ->
+                val intent = Intent(ACTION_APPLICATION_DETAILS_SETTINGS)
+                intent.data = Uri.parse("package:$packageName")
+                startActivity(intent)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showNotificationPermissionRationale() {
+        MaterialAlertDialogBuilder(this, com.google.android.material.R.style.MaterialAlertDialog_Material3)
+            .setTitle("Alert")
+            .setMessage("Notification permission is required to show notifications.")
+            .setPositiveButton("OK") { _, _ ->
+                if (Build.VERSION.SDK_INT >= 33) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private var hasNotificationPermissionGranted = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +85,7 @@ class MainActivity : AppCompatActivity() {
         // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
+        usersRef = database.getReference("users")
 
         //initialize the loadingOverlay
         loadingOverlay = findViewById(R.id.loadingOverlay)
@@ -50,7 +101,6 @@ class MainActivity : AppCompatActivity() {
 
         // Load user's QR code and name
         val currentUserUid = currentUser.uid
-        val usersRef = database.getReference("users")
 
         // Check if user is admin
         loadingOverlay.visibility = View.VISIBLE
@@ -64,22 +114,13 @@ class MainActivity : AppCompatActivity() {
                         startActivity(Intent(this@MainActivity, QRScannerActivity::class.java))
                         finish()
                     } else {
-                        // User is not an admin, start QRFragment
-                        val fragmentManager = supportFragmentManager
-                        if (!isDestroyed) {
-                            val fragmentTransaction = fragmentManager.beginTransaction()
-                            val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
-                            if (qrFragment == null) {
-                                fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
-                            } else {
-                                fragmentTransaction.show(qrFragment)
-                            }
-                            fragmentTransaction.commit()
-                        }
+                        // User is not an admin, perform additional approval check
+                        checkUserApproval(currentUserUid)
                     }
                     loadingOverlay.visibility = View.GONE
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
                 }
+
                 override fun onCancelled(databaseError: DatabaseError) {
                     Toast.makeText(
                         this@MainActivity,
@@ -120,7 +161,13 @@ class MainActivity : AppCompatActivity() {
             }
             fragmentTransaction.commit()
         }
+        if (Build.VERSION.SDK_INT >= 33) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            hasNotificationPermissionGranted = true
+        }
     }
+
     override fun onResume() {
         super.onResume()
 
@@ -132,5 +179,78 @@ class MainActivity : AppCompatActivity() {
         } else if (currentFragment is SettingsFragment) {
             smoothbottombar.itemActiveIndex = 1
         }
+    }
+
+    private fun checkUserApproval(uid: String) {
+        usersRef.child(uid).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                val approvalStatus = dataSnapshot.child("isApproved").getValue(Boolean::class.java)
+                val rejectionStatus = dataSnapshot.child("isRejected").getValue(Boolean::class.java)
+
+                if (approvalStatus == true) {
+                    // Proceed with the requested functionality
+                    val fragmentManager = supportFragmentManager
+                    if (!isDestroyed) {
+                        val fragmentTransaction = fragmentManager.beginTransaction()
+                        val qrFragment = fragmentManager.findFragmentByTag("qr_fragment")
+                        if (qrFragment == null) {
+                            fragmentTransaction.add(R.id.frameLayout, QRFragment(), "qr_fragment")
+                        } else {
+                            fragmentTransaction.show(qrFragment)
+                        }
+                        fragmentTransaction.commit()
+                    }
+                } else if (approvalStatus == false && rejectionStatus == true) {
+                    showAccountRejectedDialog()
+
+                    val currentUser = auth.currentUser
+                    currentUser?.delete()?.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            usersRef.child(uid).removeValue()
+                            auth.signOut()
+                            startActivity(Intent(this@MainActivity, FirstLoginActivity::class.java))
+                            finish()
+                        } else {
+                            Toast.makeText(
+                                this@MainActivity,
+                                "Failed to delete account: ${task.exception?.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    showAccountPendingDialog()
+                }
+            }
+
+            override fun onCancelled(databaseError: DatabaseError) {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Failed to check user approval: ${databaseError.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
+    }
+
+    private fun showAccountRejectedDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Account Rejected")
+            .setMessage("Your account has been rejected. Please register again with the correct details.")
+            .setPositiveButton("OK", null)
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun showAccountPendingDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Account Pending Approval")
+            .setMessage("Your account is pending approval. Please wait until your account is approved.")
+            .setPositiveButton("OK") { _, _ ->
+                startActivity(Intent(this@MainActivity, FirstLoginActivity::class.java))
+                finish()
+            }
+            .setCancelable(false)
+            .show()
     }
 }
