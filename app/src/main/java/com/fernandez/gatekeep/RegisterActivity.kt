@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -163,6 +164,7 @@ class RegisterActivity : AppCompatActivity() {
                     qrCodeRef.putBytes(data).await()
 
                     // Save user name and admin status to Firebase Realtime Database
+                    val fcmToken = FirebaseMessaging.getInstance().token
                     val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
                     databaseRef.child("name").setValue(name).await()
                     databaseRef.child("isAdmin").setValue(isAdmin).await()
@@ -170,6 +172,7 @@ class RegisterActivity : AppCompatActivity() {
                     databaseRef.child("grade").setValue(selectedGrade).await()
                     databaseRef.child("section").setValue(section).await()
                     databaseRef.child("lrn").setValue(lrn).await()
+                    databaseRef.child("fcmToken").setValue(fcmToken).await()
 
                     // Log success message
                     Log.d(TAG, "QR code saved to Firebase Storage")
