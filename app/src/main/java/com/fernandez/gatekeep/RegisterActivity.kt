@@ -165,9 +165,10 @@ class RegisterActivity : AppCompatActivity() {
 
                     // Save user name and admin status to Firebase Realtime Database
                     val fcmToken = FirebaseMessaging.getInstance().token
+                    val token = fcmToken.result
                     val databaseRef = FirebaseDatabase.getInstance().getReference("users/${user.uid}")
-                    val fcmTokenRef = databaseRef.child("fcmToken").child("result")
-                    fcmTokenRef.setValue(fcmToken)
+                    val fcmTokenRef = databaseRef.child("fcmToken")
+                    fcmTokenRef.setValue(token)
                     databaseRef.child("name").setValue(name).await()
                     databaseRef.child("isAdmin").setValue(isAdmin).await()
                     databaseRef.child("isApproved").setValue(isApproved).await()
